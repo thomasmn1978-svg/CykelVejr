@@ -6,23 +6,33 @@
     <title>GPX Vejr-Dashboard</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        :root { --bg: #0f172a; --panel: rgba(30, 41, 59, 0.95); --text: #f1f5f9; --card: #1e293b; --accent: #818cf8; --border: #334155; --danger: #ef4444; }
+        :root { --bg: #0f172a; --panel: rgba(30, 41, 59, 0.98); --text: #f1f5f9; --card: #1e293b; --accent: #818cf8; --border: #334155; --danger: #ef4444; }
         body, html { margin: 0; height: 100%; font-family: sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
         #map { height: 100%; width: 100%; z-index: 0; }
-        #panel { position: absolute; top: 10px; right: 10px; width: 380px; max-height: 95vh; background: var(--panel); backdrop-filter: blur(20px); border-radius: 20px; z-index: 1000; padding: 15px; overflow-y: auto; border: 1px solid var(--border); box-shadow: -5px 0 15px rgba(0,0,0,0.3); }
+        
+        #panel { 
+            position: absolute; top: 10px; right: 10px; width: 380px; max-height: 90vh; 
+            background: var(--panel); backdrop-filter: blur(20px); border-radius: 20px; 
+            z-index: 1000; padding: 15px; overflow-y: auto; border: 1px solid var(--border); 
+            box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+        }
+
+        /* MOBIL-OPTIMERING */
+        @media (max-width: 600px) {
+            #panel { top: auto; bottom: 0; right: 0; left: 0; width: 100%; border-radius: 20px 20px 0 0; max-height: 60vh; }
+        }
+
         .poi-card { background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--accent); }
         .weather-grid { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; margin-top: 8px; font-size: 0.9em; }
         .weather-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; padding: 2px; }
         .weather-data { display: flex; flex-direction: column; gap: 2px; }
-        .btn-upload { background: var(--accent); color: white; padding: 10px; border-radius: 8px; cursor: pointer; text-align: center; display: block; font-weight: bold; margin-bottom: 10px; }
+        .btn-upload { background: var(--accent); color: white; padding: 12px; border-radius: 8px; cursor: pointer; text-align: center; display: block; font-weight: bold; margin-bottom: 10px; }
         .input-group { margin-bottom: 8px; font-size: 0.9em; }
-        input { width: 100%; padding: 6px; border-radius: 5px; border: 1px solid var(--border); background: var(--card); color: white; }
-        .del-btn { float: right; cursor: pointer; color: var(--danger); font-weight: bold; }
+        input { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid var(--border); background: var(--card); color: white; box-sizing: border-box; }
+        .del-btn { float: right; cursor: pointer; color: var(--danger); font-weight: bold; padding: 5px; }
         
-        /* Popup stil */
-        dialog { border: 1px solid var(--border); background: var(--card); color: var(--text); padding: 20px; border-radius: 15px; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        dialog::backdrop { background: rgba(0,0,0,0.7); }
-        dialog button { width: 100%; padding: 10px; background: var(--accent); border: none; color: white; border-radius: 8px; cursor: pointer; margin-top: 15px; font-weight: bold; }
+        dialog { border: 1px solid var(--border); background: var(--card); color: var(--text); padding: 20px; border-radius: 15px; max-width: 90vw; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        dialog button { width: 100%; padding: 12px; background: var(--accent); border: none; color: white; border-radius: 8px; cursor: pointer; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -52,8 +62,6 @@
 <script>
     const map = L.map('map').setView([56.0, 11.0], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-    // Vis popup ved load
     document.getElementById('welcomeModal').showModal();
 
     let routeLayer = L.layerGroup().addTo(map);
@@ -119,9 +127,7 @@
                             <span>${inst.air_temperature}°C | ${d1.details.precipitation_amount || 0}mm</span>
                             <span>Vind: ${inst.wind_speed.toFixed(0)} m/s <span style="transform:rotate(${dir}deg); display:inline-block">↑</span></span>
                          </div>`;
-                }).catch(() => {
-                    document.getElementById(`w-${p.id}`).innerHTML = "Kunne ikke hente vejrdata";
-                });
+                }).catch(() => { document.getElementById(`w-${p.id}`).innerHTML = "Kunne ikke hente vejrdata"; });
         }
     }
 
