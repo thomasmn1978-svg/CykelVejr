@@ -672,6 +672,10 @@
             const rain = (bestMatch.data.next_1_hours || bestMatch.data.next_6_hours) ? ((bestMatch.data.next_1_hours || bestMatch.data.next_6_hours).details.precipitation_amount || 0) : 0;
             const windDirText = getWindDirectionText(weather.wind_from_direction);
 
+            // Hent middelvind og vindstød (hvis vindstød mangler i API, falder den tilbage til middelvinden)
+            const windSpeed = weather.wind_speed;
+            const windGust = weather.wind_speed_of_gust || windSpeed;
+
             const weatherData = getWeatherIconAndText(symbolCode);
 
             contentDiv.innerHTML = `
@@ -683,7 +687,8 @@
                     </div>
                 </div>
                 <div class="weather-details">
-                    Vind: <strong>${weather.wind_speed.toFixed(0)} m/s</strong> fra ${windDirText}<br>
+                    Vind: <strong>${windSpeed.toFixed(0)} (${windGust.toFixed(0)}) m/s</strong><br>
+                    fra ${windDirText}<br>
                     Nedbør: <strong>${rain.toFixed(1)} mm</strong>
                 </div>
             `;
