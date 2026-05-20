@@ -598,7 +598,6 @@
             const symbolCode = (bestMatch.data.next_1_hours || bestMatch.data.next_6_hours) ? (bestMatch.data.next_1_hours || bestMatch.data.next_6_hours).summary.symbol_code : '';
             const rain = (bestMatch.data.next_1_hours || bestMatch.data.next_6_hours) ? ((bestMatch.data.next_1_hours || bestMatch.data.next_6_hours).details.precipitation_amount || 0) : 0;
 
-            // Hent vindretning i tekst
             const windDirText = getWindDirectionText(weather.wind_from_direction);
 
             contentDiv.innerHTML = `
@@ -638,7 +637,7 @@
             }
         }
 
-        function createPoiCardAndFetch(lat, lon, name, isUserAdded, markerInstance = null) {
+        function createPoiCardAndFetch(lat, lon, initialName, isUserAdded, markerInstance = null) {
             const container = document.getElementById('poi-list-container');
             if (!container) return;
 
@@ -655,7 +654,7 @@
                     ${deleteButtonHtml}
                     <div class="poi-title-bar">
                         <div>
-                            <span class="poi-name">${name}</span>
+                            <span class="poi-name" id="name-${cardId}">${initialName}</span>
                             <div style="font-size:11px; color:#64748b; margin-top:2px;">Progression: ${(routePct * 100).toFixed(0)}% af ruten</div>
                         </div>
                         <span class="passage-time" id="time-tag-${cardId}">Beregner...</span>
@@ -672,6 +671,41 @@
                 container.innerHTML += cardHtml;
             }
 
+            // Slå by- eller stednavn op asynkront, hvis det er et brugerpunkt
+            if (isUserAdded) {
+                const geocodeUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1`;
+                fetch(geocodeUrl, { headers: { 'User-Agent': 'GPXWeatherPlannerLearningProject/1.0' } })
+                .then(res => res.json())
+                .then(geoData => {
+                    let locationName = '';
+                    if (geoData.address) {
+                        // Prioritering af stednavne: By, landsby, forstad, eller vejnavn som sidste udvej
+                        locationName = geoData.address.city || 
+                                       geoData.address.town || 
+                                       geoData.address.village || 
+                                       geoData.address.suburb || 
+                                       geoData.address.neighbourhood || 
+                                       geoData.address.road || 
+                                       initialName;
+                    } else {
+                        locationName = initialName;
+                    }
+                    
+                    // Opdater kort-titlen
+                    const titleEl = document.getElementById(`name-${cardId}`);
+                    if (titleEl) titleEl.innerText = locationName;
+                    
+                    // Opdater også tooltip på kortet
+                    if (markerInstance) {
+                        markerInstance.setTooltipContent(locationName);
+                    }
+                })
+                .catch(() => {
+                    // Hvis stednavne-lookup fejler, beholder den bare sit standard "Brugerpunkt #X" navn
+                });
+            }
+
+            // Hent vejrdata
             const url = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`;
             fetch(url, { headers: { 'User-Agent': 'GPXWeatherPlannerLearningProject/1.0 github.com' } })
             .then(res => { if (!res.ok) throw new Error(); return res.json(); })
@@ -690,7 +724,7 @@
             if (notice) notice.remove();
 
             userPointCount++;
-            const name = `Brugerpunkt #${userPointCount}`;
+            const fallbackName = `Brugerpunkt #${userPointCount}`;
             
             const marker = L.circleMarker([lat, lon], { 
                 radius: 7, 
@@ -701,9 +735,9 @@
                 fillOpacity: 0.9 
             }).addTo(pioLayers);
 
-            marker.bindTooltip(name, { permanent: true, direction: 'top', className: 'poi-label' });
+            marker.bindTooltip(fallbackName, { permanent: true, direction: 'top', className: 'poi-label' });
 
-            createPoiCardAndFetch(lat, lon, name, true, marker);
+            createPoiCardAndFetch(lat, lon, fallbackName, true, marker);
         }
 
         function parseAndDrawGPX(xmlText) {
