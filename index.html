@@ -350,28 +350,23 @@
             background: var(--primary-hover);
         }
 
-        /* 📱 MOBIL RE-DESIGN (FLEXBOX BASERET MOD ENHEDENS NAVIGATIONSBARER) */
+        /* 📱 MOBIL-KORREKTION: SIKRER AT BÅDE KORT OG PANELER ALTID HAR EN FAST DEL AF SKÆRMEN */
         @media (max-width: 768px) {
-            body {
-                height: 100vh;
-                height: -webkit-fill-available; /* Tvinger iOS Safari til at respektere bunden */
-            }
-
             .main-container {
                 flex-direction: column;
-                height: 100%;
+                height: calc(100vh - 59px); /* Trækker headeren fra den samlede højde */
             }
 
             #map {
-                height: 35%; /* Kortet tager kun en fast, mindre del */
+                height: 35vh !important; /* Tvinger kortet til altid at være præcis 35% af skærmen */
                 width: 100%;
                 flex: none;
             }
 
             #weather-panel {
                 width: 100%;
-                flex: 1; /* Panelet udfylder ALT dynamisk restplads i bunden */
-                height: auto;
+                height: 65vh !important; /* Tvinger panelet til at være præcis 65% af skærmen */
+                flex: none;
                 border-left: none;
                 border-top: 2px solid var(--border);
                 box-shadow: 0 -5px 15px rgba(0,0,0,0.08);
@@ -393,9 +388,9 @@
 
             .panel-content {
                 padding: 12px;
-                /* UKRUSTELIG BUFFER: Tvinger 120px tom luft ind i bunden under sidste kort, 
-                   så du altid kan rulle målområdet HELT fri af telefonens menulinjer! */
-                padding-bottom: 120px !important; 
+                /* EKSTRA STOR BUFFER: Sikrer, at det allersidste kort (målet) kan 
+                   scrolles 150px op over bunden, så telefonsystemets menuer ikke dækker det */
+                padding-bottom: 150px !important; 
             }
 
             .poi-card {
