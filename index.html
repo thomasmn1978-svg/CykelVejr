@@ -1,118 +1,147 @@
 <!DOCTYPE html>
-<html lang="da">
+<html lang="da" class="dark-mode">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPX Vejr-Dashboard Pro</title>
+    <title>GPX Vejr-Dashboard</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        :root { --bg-color: #f8fafc; --panel-bg: rgba(255, 255, 255, 0.95); --text-color: #1e293b; --card-bg: rgba(255, 255, 255, 0.9); --border-color: rgba(0,0,0,0.1); --accent: #4f46e5; }
-        .dark-mode { --bg-color: #0f172a; --panel-bg: rgba(30, 41, 59, 0.95); --text-color: #f1f5f9; --card-bg: rgba(30, 41, 59, 0.9); --border-color: rgba(255,255,255,0.1); --accent: #818cf8; }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; background: var(--bg-color); color: var(--text-color); transition: 0.3s; }
+        :root { --bg: #0f172a; --panel: rgba(30, 41, 59, 0.95); --text: #f1f5f9; --card: #1e293b; --accent: #818cf8; --border: #334155; --danger: #ef4444; }
+        body, html { margin: 0; height: 100%; font-family: sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
         #map { height: 100%; width: 100%; z-index: 1; }
-        #panel { position: absolute; top: 20px; right: 20px; width: 420px; height: 90vh; background: var(--panel-bg); backdrop-filter: blur(20px); border-radius: 20px; z-index: 1000; padding: 20px; overflow-y: auto; border: 1px solid var(--border-color); display: flex; flex-direction: column; }
-        .date-row { display: flex; gap: 5px; margin-bottom: 10px; align-items: center; }
-        select { padding: 6px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); }
-        .poi-card { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border-color); }
-        .btn-upload { background: var(--accent); color: white; padding: 12px; border-radius: 8px; cursor: pointer; text-align: center; display: block; font-weight: bold; margin-top: 10px; }
-        
-        #modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center; }
-        .modal-content { background: var(--card-bg); padding: 30px; border-radius: 20px; max-width: 400px; text-align: center; border: 1px solid var(--border-color); }
+        #panel { position: absolute; top: 10px; right: 10px; width: 350px; max-width: 90vw; max-height: 85vh; background: var(--panel); backdrop-filter: blur(20px); border-radius: 20px; z-index: 1000; padding: 15px; overflow-y: auto; border: 1px solid var(--border); }
+        @media (max-width: 600px) { #panel { width: 95vw; top: auto; bottom: 10px; left: 2.5vw; right: auto; max-height: 50vh; } }
+        .poi-card { background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); position: relative; }
+        .btn-upload { background: var(--accent); color: white; padding: 12px; border-radius: 8px; cursor: pointer; text-align: center; display: block; font-weight: bold; margin-bottom: 10px; }
+        .input-group { margin-bottom: 10px; font-size: 0.9em; }
+        input { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid var(--border); background: var(--card); color: white; box-sizing: border-box; }
+        .del-btn { position: absolute; top: 5px; right: 8px; cursor: pointer; color: var(--danger); font-size: 1.2em; font-weight: bold; }
+        #modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: var(--card); padding: 25px; border-radius: 20px; max-width: 400px; border: 1px solid var(--border); }
     </style>
 </head>
 <body>
 
 <div id="modal">
     <div class="modal-content">
-        <h2>Velkommen</h2>
-        <p>1. Starttidspunkt er sat til nu.<br>2. Upload din GPX-fil.<br>3. Se vejrudsigten for start, mål og depoter.</p>
+        <h2>Sådan bruger du siden 🚴‍♂️🌦️</h2>
+        <p>1. <strong>Upload</strong> din GPX-rute.</p>
+        <p>2. <strong>Tidsplan:</strong> Vælg dato samt start tidspunkt og hvornår du forventer at være i mål, eller din forventede gennemsnitsfart.</p>
+        <p>3. <strong>Se</strong> vejrudsigten: Systemet beregner løbende vejret på de tidspunkter, du passerer depoter osv. (hvis de er tilføjet GPX-filen), samt ved start og mål.</p>
+        <p>4. <strong>Tilføj</strong> egne punkter: Klik på kortet for at tilføje ekstra punkter, og slet dem på det røde ×.</p>
         <button onclick="document.getElementById('modal').style.display='none'" class="btn-upload">Forstået</button>
     </div>
 </div>
 
 <div id="map"></div>
 <div id="panel">
-    <h2>Rute Vejr-Dashboard</h2>
-    
-    <label>Start (Nu):</label>
-    <div class="date-row">
-        <select id="day"></select><select id="month"></select><select id="year"></select>
-        <select id="hour"></select><select id="min"></select>
-    </div>
-
-    <label>Slut:</label>
-    <div class="date-row">
-        <select id="end-day"></select><select id="end-month"></select><select id="end-year"></select>
-        <select id="end-hour"></select><select id="end-min"></select>
-    </div>
-
-    <label class="btn-upload">Upload GPX-fil
-        <input type="file" id="gpx" hidden accept=".gpx">
-    </label>
-    <div id="list" style="margin-top:20px;"></div>
+    <h3>Rute Vejr</h3>
+    <div class="input-group"><label>Dato: <input type="text" id="dateInput" placeholder="dd/mm-yyyy"></label></div>
+    <div class="input-group"><label>Starttid: <input type="text" id="startTime" value="12:46" onchange="calcEndFromSpeed()"></label></div>
+    <div class="input-group"><label>Gns. fart (km/t): <input type="number" id="speedInput" value="30" onchange="calcEndFromSpeed()"></label></div>
+    <div class="input-group"><label>Sluttid: <input type="text" id="endTime" onchange="calcSpeedFromEnd()"></label></div>
+    <label class="btn-upload">Upload ny GPX-fil<input type="file" id="gpx" hidden accept=".gpx"></label>
+    <div id="list"></div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     const map = L.map('map').setView([56.0, 11.0], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-    function initTimes(dId, mId, yId, hId, minId, offset = 0) {
-        const now = new Date(); now.setMinutes(now.getMinutes() + offset);
-        
-        const dEl = document.getElementById(dId);
-        const mEl = document.getElementById(mId);
-        const yEl = document.getElementById(yId);
-        const hEl = document.getElementById(hId);
-        const minEl = document.getElementById(minId);
-
-        for(let i=1; i<=31; i++) dEl.add(new Option(i.toString().padStart(2,'0'), i));
-        for(let i=1; i<=12; i++) mEl.add(new Option(i.toString().padStart(2,'0'), i));
-        for(let i=now.getFullYear(); i<=now.getFullYear()+1; i++) yEl.add(new Option(i, i));
-        for(let i=0; i<24; i++) hEl.add(new Option(i.toString().padStart(2,'0'), i));
-        for(let i=0; i<60; i+=15) minEl.add(new Option(i.toString().padStart(2,'0'), i));
-        
-        dEl.value = now.getDate();
-        mEl.value = now.getMonth() + 1;
-        yEl.value = now.getFullYear();
-        hEl.value = now.getHours();
-        minEl.value = Math.floor(now.getMinutes() / 15) * 15;
-    }
     
-    initTimes('day', 'month', 'year', 'hour', 'min');
-    initTimes('end-day', 'end-month', 'end-year', 'end-hour', 'end-min', 60); // Sluttid 1 time senere som standard
+    const d = new Date();
+    document.getElementById('dateInput').value = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
 
-    async function processPoint(lat, lon, name, list) {
-        const card = document.createElement('div');
-        card.className = 'poi-card';
-        card.innerHTML = `<strong>${name}</strong><br><span class="weather">Henter vejr...</span>`;
-        list.appendChild(card);
-        try {
-            const res = await fetch(`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}`, { headers: { 'User-Agent': 'GPXApp' } });
-            const d = await res.json();
-            const w = d.properties.timeseries[0].data.instant.details;
-            card.querySelector('.weather').innerHTML = `🌡️ ${w.air_temperature}°C, 💨 ${w.wind_speed} m/s`;
-        } catch { card.querySelector('.weather').innerHTML = "Vejr fejl"; }
-        L.marker([lat, lon]).addTo(map).bindPopup(name);
+    let routeLayer = L.layerGroup().addTo(map);
+    let polylineCoords = [], pointCollection = [], totalDist = 0;
+
+    function calcEndFromSpeed() {
+        const speed = parseFloat(document.getElementById('speedInput').value);
+        const [h, m] = document.getElementById('startTime').value.split(':').map(Number);
+        if (totalDist > 0 && speed > 0 && !isNaN(h) && !isNaN(m)) {
+            let totalMins = (h * 60) + m + (totalDist / speed * 60);
+            document.getElementById('endTime').value = `${String(Math.floor(totalMins/60)%24).padStart(2,'0')}:${String(Math.floor(totalMins%60)).padStart(2,'0')}`;
+            renderList();
+        }
     }
+
+    function calcSpeedFromEnd() {
+        const [hS, mS] = document.getElementById('startTime').value.split(':').map(Number);
+        const [hE, mE] = document.getElementById('endTime').value.split(':').map(Number);
+        const durationHours = (hE * 60 + mE - (hS * 60 + mS)) / 60;
+        if (totalDist > 0 && durationHours > 0) {
+            document.getElementById('speedInput').value = (totalDist / durationHours).toFixed(1);
+            renderList();
+        }
+    }
+
+    function getArrivalTime(distFromStart) {
+        const speed = parseFloat(document.getElementById('speedInput').value);
+        const [h, m] = document.getElementById('startTime').value.split(':').map(Number);
+        const travelHours = distFromStart / speed;
+        let totalMins = (h * 60) + m + (travelHours * 60);
+        return {
+            str: `${String(Math.floor(totalMins/60)%24).padStart(2,'0')}:${String(Math.floor(totalMins%60)).padStart(2,'0')}`,
+            date: new Date(new Date().setHours(Math.floor(totalMins/60)%24, Math.floor(totalMins%60), 0, 0))
+        };
+    }
+
+    async function renderList() {
+        const list = document.getElementById('list'); list.innerHTML = '';
+        pointCollection.sort((a, b) => a.index - b.index);
+        
+        let distSoFar = 0;
+        for (let i = 0; i < pointCollection.length; i++) {
+            let p = pointCollection[i];
+            if (i > 0) distSoFar += L.latLng([pointCollection[i-1].lat, pointCollection[i-1].lon]).distanceTo([p.lat, p.lon]) / 1000;
+            
+            const arrival = getArrivalTime(distSoFar);
+            const card = document.createElement('div'); card.className = 'poi-card';
+            card.innerHTML = `${p.isUser ? '<span class="del-btn" onclick="removePoint('+p.id+')">×</span>' : ''}<strong>${p.name}</strong><br><small>Passeres kl. ${arrival.str}</small><br><span class="weather">Henter data...</span>`;
+            list.appendChild(card);
+            
+            fetch(`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${p.lat}&lon=${p.lon}`, { headers: { 'User-Agent': 'GPXWeatherApp' } })
+                .then(r => r.json()).then(d => {
+                    const closest = d.properties.timeseries.reduce((prev, curr) => Math.abs(new Date(curr.time) - arrival.date) < Math.abs(new Date(prev.time) - arrival.date) ? curr : prev);
+                    const w = closest.data.instant.details;
+                    const sym = closest.data.next_1_hours.summary.symbol_code.split('_')[0];
+                    const gust = closest.data.instant.details.wind_speed_of_gust || w.wind_speed;
+                    const trans = { 'clearsky': 'Solrigt', 'fair': 'Letskyet', 'cloudy': 'Skyet', 'rain': 'Regn' };
+                    card.querySelector('.weather').innerHTML = `${trans[sym] || sym} | 🌡️ ${w.air_temperature}°C | 💨 ${w.wind_speed} m/s (${gust} m/s)`;
+                });
+        }
+    }
+
+    async function addPoint(lat, lon, name, isUser = false) {
+        const address = name || await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`).then(r => r.json()).then(d => d.address.road || d.address.village || "Punkt").catch(() => "Punkt");
+        const idx = polylineCoords.length > 0 ? polylineCoords.map((p, i) => ({d: L.latLng(p).distanceTo([lat, lon]), i})).sort((a,b)=>a.d-b.d)[0].i : 0;
+        pointCollection.push({ id: Date.now()+Math.random(), lat, lon, name: address, index: idx, isUser });
+        L.marker([lat, lon]).addTo(routeLayer).bindPopup(address);
+        renderList();
+    }
+
+    function removePoint(id) { pointCollection = pointCollection.filter(p => p.id !== id); renderList(); }
 
     document.getElementById('gpx').addEventListener('change', async function(e) {
-        const text = await e.target.files[0].text();
-        const xml = new DOMParser().parseFromString(text, "text/xml");
-        const list = document.getElementById('list'); list.innerHTML = '';
-        const trkpts = Array.from(xml.getElementsByTagName("trkpt"));
-        const wpts = Array.from(xml.getElementsByTagName("wpt"));
+        routeLayer.clearLayers(); pointCollection = [];
+        const xml = new DOMParser().parseFromString(await e.target.files[0].text(), "text/xml");
+        polylineCoords = Array.from(xml.getElementsByTagName("trkpt")).map(p => [parseFloat(p.getAttribute("lat")), parseFloat(p.getAttribute("lon"))]);
+        L.polyline(polylineCoords, {color: '#818cf8', weight: 4}).addTo(routeLayer);
+        map.fitBounds(L.polyline(polylineCoords).getBounds(), { padding: [20, 20] });
         
-        const coords = trkpts.map(p => [p.getAttribute("lat"), p.getAttribute("lon")]);
-        const poly = L.polyline(coords, {color: '#4f46e5', weight: 4}).addTo(map);
-        map.fitBounds(poly.getBounds(), {paddingTopLeft: [50, 50], paddingBottomRight: [450, 50]});
-
-        for(let pt of wpts) await processPoint(pt.getAttribute("lat"), pt.getAttribute("lon"), pt.getElementsByTagName("name")[0]?.textContent || "Depot", list);
-        if(trkpts.length > 0) {
-            await processPoint(trkpts[0].getAttribute("lat"), trkpts[0].getAttribute("lon"), "Start", list);
-            await processPoint(trkpts[trkpts.length-1].getAttribute("lat"), trkpts[trkpts.length-1].getAttribute("lon"), "Mål", list);
+        totalDist = 0;
+        for(let i=0; i<polylineCoords.length-1; i++) totalDist += L.latLng(polylineCoords[i]).distanceTo(polylineCoords[i+1]);
+        totalDist /= 1000;
+        
+        if(polylineCoords.length > 0) {
+            await addPoint(polylineCoords[0][0], polylineCoords[0][1], "Start");
+            await addPoint(polylineCoords[polylineCoords.length-1][0], polylineCoords[polylineCoords.length-1][1], "Mål");
         }
+        for(let pt of Array.from(xml.getElementsByTagName("wpt"))) await addPoint(pt.getAttribute("lat"), pt.getAttribute("lon"), pt.getElementsByTagName("name")[0]?.textContent);
+        calcEndFromSpeed();
     });
+
+    map.on('click', (e) => addPoint(e.latlng.lat, e.latlng.lng, null, true));
 </script>
 </body>
 </html>
