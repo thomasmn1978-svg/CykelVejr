@@ -290,12 +290,12 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(4px);
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(5px);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 99999; /* Øget markant for at ligge øverst online */
+            z-index: 99999;
         }
 
         .modal-box {
@@ -304,7 +304,7 @@
             border-radius: 12px;
             max-width: 500px;
             width: 90%;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
             display: flex;
             flex-direction: column;
             gap: 15px;
@@ -333,14 +333,14 @@
             background: var(--primary);
             color: white;
             border: none;
-            padding: 12px;
+            padding: 14px;
             border-radius: 6px;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 15px;
             cursor: pointer;
             transition: background 0.2s;
             margin-top: 5px;
-            -webkit-appearance: none; /* Sikrer iOS support */
+            -webkit-appearance: none;
         }
 
         .modal-close-btn:hover {
@@ -446,12 +446,14 @@
         let routePoints = []; 
         let totalRouteDistance = 0;
         let userPointCount = 0;
+        let isGuideOpen = true; // SIKRING: Holder styr på om guiden dækker skærmen
 
         // 2. Hjælpefunktioner
         function closeGuide() {
             const modal = document.getElementById('guide-modal');
             if (modal) {
                 modal.style.display = 'none';
+                isGuideOpen = false; // Nu må kortet gerne modtage klik!
             }
         }
 
@@ -885,6 +887,9 @@
 
         // 5. Event Listeners
         map.on('click', function(e) {
+            // INTEGRERET SIKRING: Afvis klik fuldstændigt hvis guiden stadig er åben
+            if (isGuideOpen) return;
+
             const panel = document.getElementById('weather-panel');
             if (panel && panel.classList.contains('open')) {
                 addUserPoint(e.latlng.lat, e.latlng.lng);
@@ -903,12 +908,12 @@
             });
         }
 
-        // FEJLSIKRING ONLINE: Luk-knap lytter nu både på traditionelle klik og touch-events
+        // SIKRET LUK-FUNKTION TIL ONLINE BRUG
         const closeBtn = document.getElementById('close-modal-btn');
         if (closeBtn) {
             const handleClose = function(e) {
                 e.preventDefault();
-                e.stopPropagation(); // Afbryder signalet, så det ikke rører kortet bagved!
+                e.stopPropagation(); 
                 closeGuide();
             };
             
