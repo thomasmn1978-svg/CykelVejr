@@ -2,21 +2,29 @@
 <html lang="da" class="dark-mode">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GPX Vejr-Dashboard</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        :root { --bg: #0f172a; --panel: rgba(30, 41, 59, 0.95); --text: #f1f5f9; --card: #1e293b; --accent: #818cf8; --border: #334155; --danger: #ef4444; }
-        body, html { margin: 0; height: 100%; font-family: sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+        :root { --bg: #0f172a; --panel: rgba(30, 41, 59, 0.98); --text: #f1f5f9; --card: #1e293b; --accent: #818cf8; --border: #334155; --danger: #ef4444; }
+        body, html { margin: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
         #map { height: 100%; width: 100%; z-index: 1; }
-        #panel { position: absolute; top: 10px; right: 10px; width: 350px; max-width: 90vw; max-height: 85vh; background: var(--panel); backdrop-filter: blur(20px); border-radius: 20px; z-index: 1000; padding: 15px; overflow-y: auto; border: 1px solid var(--border); }
-        .poi-card { background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); position: relative; }
-        .btn-upload { background: var(--accent); color: white; padding: 12px; border-radius: 8px; cursor: pointer; text-align: center; display: block; font-weight: bold; margin-bottom: 10px; }
-        .input-group { margin-bottom: 10px; font-size: 0.9em; }
-        input { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid var(--border); background: var(--card); color: white; box-sizing: border-box; }
-        .del-btn { position: absolute; top: 5px; right: 8px; cursor: pointer; color: var(--danger); font-size: 1.2em; font-weight: bold; }
+        
+        /* Panel optimering til mobil */
+        #panel { position: absolute; bottom: 0; right: 0; width: 100%; max-height: 50vh; background: var(--panel); border-radius: 20px 20px 0 0; z-index: 1000; padding: 20px; overflow-y: auto; border-top: 1px solid var(--border); box-sizing: border-box; }
+        
+        /* Desktop justering */
+        @media (min-width: 768px) {
+            #panel { top: 10px; right: 10px; width: 350px; max-height: 85vh; border-radius: 20px; border: 1px solid var(--border); }
+        }
+
+        .poi-card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); position: relative; }
+        .btn-upload { background: var(--accent); color: white; padding: 15px; border-radius: 12px; cursor: pointer; text-align: center; display: block; font-weight: bold; margin-bottom: 10px; font-size: 1em; }
+        .input-group { margin-bottom: 12px; font-size: 1em; }
+        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: white; font-size: 1em; box-sizing: border-box; }
+        .del-btn { position: absolute; top: 10px; right: 15px; cursor: pointer; color: var(--danger); font-size: 1.5em; font-weight: bold; }
         .wind-alert { color: var(--danger); font-weight: bold; }
-        #modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        #modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         .modal-content { background: var(--card); padding: 25px; border-radius: 20px; max-width: 400px; border: 1px solid var(--border); }
     </style>
 </head>
@@ -24,24 +32,23 @@
 
 <div id="modal">
     <div class="modal-content">
-        <h2>Sådan bruger du siden 🚴‍♂️🌦️</h2>
-        <p>1. <strong>Upload</strong> din GPX-rute.</p>
-        <p>2. <strong>Tidsplan:</strong> Vælg dato, starttid og fart.</p>
-        <p>3. <strong>Vejr:</strong> Systemet beregner vejret for ruten.</p>
-        <p>4. <strong>Interaktion:</strong> Klik på kortet for at tilføje egne punkter.</p>
-        <button onclick="document.getElementById('modal').style.display='none'" class="btn-upload">Forstået</button>
+        <h2>Velkommen 🚴‍♂️</h2>
+        <p>1. Upload GPX fil.</p>
+        <p>2. Vælg tid og fart.</p>
+        <p>3. Klik på kortet for at tilføje punkter.</p>
+        <button onclick="document.getElementById('modal').style.display='none'" class="btn-upload">Start</button>
     </div>
 </div>
 
 <div id="map"></div>
 <div id="panel">
     <h3>Rute Vejr</h3>
-    <div class="input-group"><label>Dato (dd-mm-åååå): <input type="text" id="dateInput" onchange="renderList();"></label></div>
+    <div class="input-group"><label>Dato: <input type="text" id="dateInput" onchange="renderList();"></label></div>
     <div class="input-group"><label>Starttid: <input type="text" id="startTime" onchange="calcEndFromSpeed();"></label></div>
     <div class="input-group"><label>Gns. fart (km/t): <input type="number" id="speedInput" onchange="calcEndFromSpeed();"></label></div>
     <div class="input-group"><label>Sluttid: <input type="text" id="endTime" onchange="calcSpeedFromEnd();"></label></div>
     <label class="btn-upload">Upload GPX fil<input type="file" id="gpx" hidden accept=".gpx"></label>
-    <div id="list" style="margin-top: 20px;"></div>
+    <div id="list"></div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -99,7 +106,6 @@
                         const data = forecast.data;
                         const gust = data.next_1_hours?.details?.wind_speed_of_gust || data.next_6_hours?.details?.wind_speed_of_gust || data.instant.details.wind_speed;
                         const gustDisplay = gust.toFixed(1);
-                        
                         card.querySelector('.weather').innerHTML = `${isDay ? '☀️' : '🌙'} ${weatherMap[data.next_1_hours?.summary.symbol_code.replace(/_day|_night/, '')] || 'Vejr'} <br> 🌡️ ${data.instant.details.air_temperature}°C | 💨 ${data.instant.details.wind_speed} m/s ${getWindArrow(data.instant.details.wind_from_direction)} <br> <span class="${gustDisplay > 10 ? 'wind-alert' : ''}">Vindstød: ${gustDisplay} m/s</span>`;
                     });
                 });
