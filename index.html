@@ -105,9 +105,9 @@
                     const closest = d.properties.timeseries.reduce((prev, curr) => Math.abs(new Date(curr.time) - arrival.date) < Math.abs(new Date(prev.time) - arrival.date) ? curr : prev);
                     const w = closest.data.instant.details;
                     const sym = closest.data.next_1_hours.summary.symbol_code.split('_')[0];
-                    const gust = closest.data.instant.details.wind_speed_of_gust || w.wind_speed;
+                    const gust = (w.wind_speed_of_gust !== undefined) ? `${w.wind_speed_of_gust} m/s` : "-";
                     const trans = { 'clearsky': 'Solrigt', 'fair': 'Letskyet', 'cloudy': 'Skyet', 'rain': 'Regn' };
-                    card.querySelector('.weather').innerHTML = `${trans[sym] || sym} | 🌡️ ${w.air_temperature}°C | 💨 ${w.wind_speed} m/s (${gust} m/s)`;
+                    card.querySelector('.weather').innerHTML = `${trans[sym] || sym} | 🌡️ ${w.air_temperature}°C | 💨 ${w.wind_speed} m/s (${gust})`;
                 });
         }
     }
