@@ -18,9 +18,24 @@
         .input-group { margin-bottom: 8px; font-size: 0.9em; }
         input { width: 100%; padding: 6px; border-radius: 5px; border: 1px solid var(--border); background: var(--card); color: white; }
         .del-btn { float: right; cursor: pointer; color: var(--danger); font-weight: bold; }
+        
+        /* Popup stil */
+        dialog { border: 1px solid var(--border); background: var(--card); color: var(--text); padding: 20px; border-radius: 15px; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        dialog::backdrop { background: rgba(0,0,0,0.7); }
+        dialog button { width: 100%; padding: 10px; background: var(--accent); border: none; color: white; border-radius: 8px; cursor: pointer; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
+
+<dialog id="welcomeModal">
+    <h2>Sådan bruger du siden 🚴‍♂️🌦️</h2>
+    <ul style="line-height: 1.6; padding-left: 20px;">
+        <li><b>Upload:</b> Din GPX-rute via knappen.</li>
+        <li><b>Tidsplan:</b> Vælg dato, starttidspunkt og forventet gns. fart eller forventet sluttidspunkt.</li>
+        <li><b>Se vejrudsigten:</b> Systemet beregner automatisk vejret ved start og mål på ruten. Du kan selv tilføje flere punkter, f.eks. ved et depot. Tryk på kortet og punktet bliver tilføjet oversigten.</li>
+    </ul>
+    <button onclick="document.getElementById('welcomeModal').close()">Forstået</button>
+</dialog>
 
 <div id="map"></div>
 <div id="panel">
@@ -37,6 +52,9 @@
 <script>
     const map = L.map('map').setView([56.0, 11.0], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    // Vis popup ved load
+    document.getElementById('welcomeModal').showModal();
 
     let routeLayer = L.layerGroup().addTo(map);
     let pointCollection = [], polylineCoords = [], totalDist = 0;
