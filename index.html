@@ -14,7 +14,7 @@
             position: absolute; top: 10px; right: 10px; width: 380px; max-height: 90vh; 
             background: var(--panel); backdrop-filter: blur(20px); border-radius: 20px; 
             z-index: 1000; padding: 15px; overflow-y: auto; border: 1px solid var(--border); 
-            box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+            box-shadow: -5px 0 15px rgba(0,0,0,0.3); transition: scroll 0.3s ease;
         }
 
         @media (max-width: 600px) {
@@ -95,6 +95,8 @@
         }
         pointCollection.push({ id: Date.now()+Math.random(), lat, lon, name, isUser, dist: dist/1000, marker });
         renderList();
+        // Scroll panelet ned til det nye punkt
+        setTimeout(() => { document.getElementById('panel').scrollTop = document.getElementById('panel').scrollHeight; }, 100);
     }
 
     async function renderList() {
