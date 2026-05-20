@@ -421,7 +421,7 @@
             <ol>
                 <li><strong>Upload din GPX-rute</strong> via knappen øverst til højre.</li>
                 <li><strong>Tidsplan:</strong> Vælg dato samt start tidspunkt og hvornår du forventer at være i mål.</li>
-                <li><strong>Se vejrudsigten:</strong> Systemet beregner løbende vejret på de tidspunkter, du passerer WayPoints (POIs) samt start og mål.</li>
+                <li><strong>Se vejrudsigten:</strong> Systemet beregner løbende vejret på de tidspunkter, du passerer depoter osv. (hvis de er tilføjet GPX-filen), samt ved start og mål.</li>
                 <li><strong>Tilføj egne punkter:</strong> Klik på kortet for at tilføje ekstra punkter, og slet dem på det røde <span style="color:var(--danger); font-weight:bold;">×</span>.</li>
             </ol>
             <button class="modal-close-btn" id="close-modal-btn">Perfekt, lad mig starte!</button>
@@ -807,7 +807,6 @@
                 .catch(() => {});
             }
 
-            // Skiftet her til "complete" i stedet for "compact" for at tvinge fuldt datasæt igennem
             const url = `https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`;
             fetch(url, { headers: { 'User-Agent': 'GPXWeatherPlannerLearningProject/1.0 github.com' } })
             .then(res => { if (!res.ok) throw new Error(); return res.json(); })
