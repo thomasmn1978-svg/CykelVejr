@@ -62,7 +62,7 @@
             border: 2px solid var(--border);
             color: var(--text);
             background-color: white;
-            padding: 6px 12px;
+            padding: 8px 14px;
             border-radius: 6px;
             font-size: 13px;
             font-weight: 600;
@@ -149,6 +149,7 @@
             display: flex;
             gap: 4px;
             align-items: center;
+            flex-wrap: wrap; /* Sikrer at det pakker sig pænt på smalle skærme */
         }
 
         .time-field select {
@@ -160,12 +161,13 @@
             color: var(--text);
             background: white;
             cursor: pointer;
+            height: 34px;
         }
 
         .select-day { width: 50px; text-align: center; }
         .select-month { width: 50px; text-align: center; }
         .select-year { width: 68px; text-align: center; }
-        .select-time { width: 70px; text-align: center; margin-left: 8px; font-weight: bold; border-color: #cbd5e1 !important; }
+        .select-time { width: 75px; text-align: center; margin-left: 4px; font-weight: bold; border-color: #cbd5e1 !important; }
 
         .date-separator {
             font-size: 14px;
@@ -177,6 +179,7 @@
             flex: 1;
             overflow-y: auto;
             padding: 15px;
+            -webkit-overflow-scrolling: touch; /* Giver silkeblød scroll på iPhones */
         }
 
         .poi-card {
@@ -205,7 +208,7 @@
             border-bottom: 1px solid #f1f5f9;
             padding-bottom: 6px;
             margin-bottom: 8px;
-            padding-right: 25px;
+            padding-right: 30px;
         }
 
         .poi-name {
@@ -226,15 +229,15 @@
 
         .delete-btn {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 8px;
+            right: 8px;
             background: transparent;
             border: none;
             color: #94a3b8;
-            font-size: 20px;
+            font-size: 24px;
             font-weight: bold;
             cursor: pointer;
-            padding: 0 5px;
+            padding: 5px; /* Større klikfelt til mobiler */
             line-height: 1;
             transition: color 0.2s;
         }
@@ -303,7 +306,7 @@
             padding: 25px;
             border-radius: 12px;
             max-width: 500px;
-            width: 90%;
+            width: 85%;
             box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
             display: flex;
             flex-direction: column;
@@ -347,21 +350,52 @@
             background: var(--primary-hover);
         }
 
+        /* 📱 OPTIMERET RESPONSIVT DESIGN TIL SMARTPHONES */
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
             }
 
             #map {
-                height: 380px;
+                height: 40vh; /* Bruger relativ højde i stedet for faste pixels */
                 flex: none;
             }
 
             #weather-panel {
                 width: 100%;
-                height: calc(100vh - 380px - 59px);
+                height: 60vh; /* Panelet fylder resten af skærmen */
                 border-left: none;
-                border-top: 1px solid var(--border);
+                border-top: 2px solid var(--border);
+                box-shadow: 0 -4px 15px rgba(0,0,0,0.08); /* Skygge i toppen for dybde */
+            }
+
+            .panel-header {
+                padding: 12px;
+            }
+
+            .time-planner-box {
+                padding: 10px;
+                gap: 8px;
+            }
+
+            .time-field select {
+                font-size: 14px; /* Større tekst på mobil forhindrer iOS i at auto-zoome */
+                height: 36px;
+            }
+
+            .panel-content {
+                padding: 12px;
+                /* KRITISK FIX: Ekstra luft i bunden sikrer, at man altid kan scrolle det sidste kort helt fri af skærmkanten */
+                padding-bottom: 80px; 
+            }
+
+            .poi-card {
+                padding: 12px;
+                margin-bottom: 10px;
+            }
+
+            .weather-temp {
+                font-size: 1.4rem; /* Lidt tydeligere temperaturer på farten */
             }
         }
     </style>
@@ -446,14 +480,14 @@
         let routePoints = []; 
         let totalRouteDistance = 0;
         let userPointCount = 0;
-        let isGuideOpen = true; // SIKRING: Holder styr på om guiden dækker skærmen
+        let isGuideOpen = true; 
 
         // 2. Hjælpefunktioner
         function closeGuide() {
             const modal = document.getElementById('guide-modal');
             if (modal) {
                 modal.style.display = 'none';
-                isGuideOpen = false; // Nu må kortet gerne modtage klik!
+                isGuideOpen = false; 
             }
         }
 
@@ -887,7 +921,6 @@
 
         // 5. Event Listeners
         map.on('click', function(e) {
-            // INTEGRERET SIKRING: Afvis klik fuldstændigt hvis guiden stadig er åben
             if (isGuideOpen) return;
 
             const panel = document.getElementById('weather-panel');
@@ -908,7 +941,6 @@
             });
         }
 
-        // SIKRET LUK-FUNKTION TIL ONLINE BRUG
         const closeBtn = document.getElementById('close-modal-btn');
         if (closeBtn) {
             const handleClose = function(e) {
