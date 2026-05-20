@@ -672,9 +672,12 @@
             const rain = (bestMatch.data.next_1_hours || bestMatch.data.next_6_hours) ? ((bestMatch.data.next_1_hours || bestMatch.data.next_6_hours).details.precipitation_amount || 0) : 0;
             const windDirText = getWindDirectionText(weather.wind_from_direction);
 
-            // Korrekt hentning af middelvind og de reelle vindstød (wind_speed_of_gust)
-            const windSpeed = weather.wind_speed ? weather.wind_speed : 0;
-            const windGust = weather.wind_speed_of_gust ? weather.wind_speed_of_gust : windSpeed;
+            // Præcis udpakning af middelvind og de detaljerede vindstød fra Complete-API'et
+            const windSpeed = weather.wind_speed ? Math.round(weather.wind_speed) : 0;
+            const windGust = weather.wind_speed_of_gust ? Math.round(weather.wind_speed_of_gust) : windSpeed;
+
+            // Formater tekststreng så parentes kun vises hvis vindstødet reelt er kraftigere end middelvinden
+            const windDisplayString = (windGust > windSpeed) ? `${windSpeed} (${windGust}) m/s` : `${windSpeed} m/s`;
 
             const weatherData = getWeatherIconAndText(symbolCode);
 
@@ -687,7 +690,7 @@
                     </div>
                 </div>
                 <div class="weather-details">
-                    Vind: <strong>${windSpeed.toFixed(0)} (${windGust.toFixed(0)}) m/s</strong><br>
+                    Vind: <strong>${windDisplayString}</strong><br>
                     fra ${windDirText}<br>
                     Nedbør: <strong>${rain.toFixed(1)} mm</strong>
                 </div>
@@ -804,7 +807,8 @@
                 .catch(() => {});
             }
 
-            const url = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`;
+            // Skiftet her til "complete" i stedet for "compact" for at tvinge fuldt datasæt igennem
+            const url = `https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`;
             fetch(url, { headers: { 'User-Agent': 'GPXWeatherPlannerLearningProject/1.0 github.com' } })
             .then(res => { if (!res.ok) throw new Error(); return res.json(); })
             .then(data => {
