@@ -10,10 +10,8 @@
         body, html { margin: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
         #map { height: 100%; width: 100%; z-index: 1; }
         
-        /* Panel optimering til mobil */
         #panel { position: absolute; bottom: 0; right: 0; width: 100%; max-height: 50vh; background: var(--panel); border-radius: 20px 20px 0 0; z-index: 1000; padding: 20px; overflow-y: auto; border-top: 1px solid var(--border); box-sizing: border-box; }
         
-        /* Desktop justering */
         @media (min-width: 768px) {
             #panel { top: 10px; right: 10px; width: 350px; max-height: 85vh; border-radius: 20px; border: 1px solid var(--border); }
         }
@@ -177,7 +175,9 @@
         for(let i=0; i<polylineCoords.length-1; i++) totalDist += L.latLng(polylineCoords[i]).distanceTo(polylineCoords[i+1]);
         totalDist /= 1000;
         L.polyline(polylineCoords, {color: '#818cf8'}).addTo(routeLayer);
-        map.fitBounds(L.polyline(polylineCoords).getBounds(), { paddingBottomRight: [400, 0] });
+        
+        const padding = window.innerWidth < 768 ? [0, 300] : [400, 0];
+        map.fitBounds(L.polyline(polylineCoords).getBounds(), { paddingBottomRight: padding });
         
         addPoint(polylineCoords[0][0], polylineCoords[0][1], "Start");
         addPoint(polylineCoords[polylineCoords.length-1][0], polylineCoords[polylineCoords.length-1][1], "Mål");
