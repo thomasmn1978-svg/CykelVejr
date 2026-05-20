@@ -2,7 +2,7 @@
 <html lang="da" class="dark-mode">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GPX Vejr-Dashboard</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -17,9 +17,12 @@
             box-shadow: -5px 0 15px rgba(0,0,0,0.3);
         }
 
-        /* MOBIL-OPTIMERING */
+        /* Mobil-responsivitet */
         @media (max-width: 600px) {
-            #panel { top: auto; bottom: 0; right: 0; left: 0; width: 100%; border-radius: 20px 20px 0 0; max-height: 60vh; }
+            #panel { 
+                top: auto; bottom: 0; right: 0; left: 0; width: 100%; height: auto; 
+                max-height: 50vh; border-radius: 20px 20px 0 0; padding: 15px; 
+            }
         }
 
         .poi-card { background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--accent); }
@@ -32,6 +35,7 @@
         .del-btn { float: right; cursor: pointer; color: var(--danger); font-weight: bold; padding: 5px; }
         
         dialog { border: 1px solid var(--border); background: var(--card); color: var(--text); padding: 20px; border-radius: 15px; max-width: 90vw; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        dialog::backdrop { background: rgba(0,0,0,0.7); }
         dialog button { width: 100%; padding: 12px; background: var(--accent); border: none; color: white; border-radius: 8px; cursor: pointer; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
