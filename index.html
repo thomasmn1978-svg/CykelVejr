@@ -27,8 +27,8 @@
         <h2>Sådan bruger du siden 🚴‍♂️🌦️</h2>
         <p>1. <strong>Upload</strong> din GPX-rute.</p>
         <p>2. <strong>Tidsplan:</strong> Vælg dato samt start tidspunkt og hvornår du forventer at være i mål, eller din forventede gennemsnitsfart.</p>
-        <p>3. <strong>Se</strong> vejrudsigten: Systemet beregner løbende vejret på de tidspunkter, du passerer depoter osv. (hvis de er tilføjet GPX-filen), samt ved start og mål.</p>
-        <p>4. <strong>Tilføj</strong> egne punkter: Klik på kortet for at tilføje ekstra punkter, og slet dem på det røde ×.</p>
+        <p>3. <strong>Se</strong> <strong>vejrudsigten:</strong> Systemet beregner løbende vejret på de tidspunkter, du passerer depoter osv. (hvis de er tilføjet GPX-filen), samt ved start og mål.</p>
+        <p>4. <strong>Tilføj</strong> <strong>egne punkter:</strong> Klik på kortet for at tilføje ekstra punkter, og slet dem på det røde ×.</p>
         <button onclick="document.getElementById('modal').style.display='none'" class="btn-upload">Forstået</button>
     </div>
 </div>
@@ -97,7 +97,7 @@
             
             const arrival = getArrivalTime(distSoFar);
             const card = document.createElement('div'); card.className = 'poi-card';
-            card.innerHTML = `${p.isUser ? '<span class="del-btn" onclick="removePoint('+p.id+')">×</span>' : ''}<strong>${p.name}</strong><br><small>Passeres kl. ${arrival.str}</small><br><span class="weather">Henter data...</span>`;
+            card.innerHTML = `${p.isUser ? '<span class="del-btn" onclick="removePoint('+p.id+')">×</span>' : ''}<strong>${p.name}</strong><br><small>Passeres kl. ${arrival.str}</small><br><span class="weather">Henter vejrdata...</span>`;
             list.appendChild(card);
             
             fetch(`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${p.lat}&lon=${p.lon}`, { headers: { 'User-Agent': 'GPXWeatherApp' } })
@@ -106,7 +106,12 @@
                     const w = closest.data.instant.details;
                     const sym = closest.data.next_1_hours.summary.symbol_code.split('_')[0];
                     const gust = (w.wind_speed_of_gust !== undefined) ? `${w.wind_speed_of_gust} m/s` : "-";
-                    const trans = { 'clearsky': 'Solrigt', 'fair': 'Letskyet', 'cloudy': 'Skyet', 'rain': 'Regn' };
+                    
+                    const trans = { 
+                        'clearsky': 'Solrigt', 'fair': 'Letskyet', 'partlycloudy': 'Let skyet', 
+                        'cloudy': 'Skyet', 'rain': 'Regn', 'lightrain': 'Let regn', 
+                        'heavyrain': 'Kraftig regn', 'sleet': 'Slud', 'snow': 'Sne', 'fog': 'Tåge' 
+                    };
                     card.querySelector('.weather').innerHTML = `${trans[sym] || sym} | 🌡️ ${w.air_temperature}°C | 💨 ${w.wind_speed} m/s (${gust})`;
                 });
         }
@@ -115,7 +120,10 @@
     async function addPoint(lat, lon, name, isUser = false) {
         const address = name || await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`).then(r => r.json()).then(d => d.address.road || d.address.village || "Punkt").catch(() => "Punkt");
         const idx = polylineCoords.length > 0 ? polylineCoords.map((p, i) => ({d: L.latLng(p).distanceTo([lat, lon]), i})).sort((a,b)=>a.d-b.d)[0].i : 0;
+        
         pointCollection.push({ id: Date.now()+Math.random(), lat, lon, name: address, index: idx, isUser });
+        pointCollection.sort((a, b) => a.index - b.index);
+        
         L.marker([lat, lon]).addTo(routeLayer).bindPopup(address);
         renderList();
     }
