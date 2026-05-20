@@ -672,9 +672,9 @@
             const rain = (bestMatch.data.next_1_hours || bestMatch.data.next_6_hours) ? ((bestMatch.data.next_1_hours || bestMatch.data.next_6_hours).details.precipitation_amount || 0) : 0;
             const windDirText = getWindDirectionText(weather.wind_from_direction);
 
-            // Hent middelvind og vindstød (hvis vindstød mangler i API, falder den tilbage til middelvinden)
-            const windSpeed = weather.wind_speed;
-            const windGust = weather.wind_speed_of_gust || windSpeed;
+            // Korrekt hentning af middelvind og de reelle vindstød (wind_speed_of_gust)
+            const windSpeed = weather.wind_speed ? weather.wind_speed : 0;
+            const windGust = weather.wind_speed_of_gust ? weather.wind_speed_of_gust : windSpeed;
 
             const weatherData = getWeatherIconAndText(symbolCode);
 
