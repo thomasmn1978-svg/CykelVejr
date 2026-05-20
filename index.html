@@ -249,21 +249,34 @@
             justify-content: space-between;
             align-items: center;
             font-size: 14px;
+            gap: 10px;
         }
 
         .weather-main {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             font-weight: 600;
             color: #1e293b;
+        }
+
+        .weather-icon {
+            font-size: 2.2rem;
+            line-height: 1;
+            display: inline-block;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .weather-text-block {
+            display: flex;
+            flex-direction: column;
         }
 
         .weather-temp {
             font-size: 1.3rem;
             font-weight: 800;
             color: #1e293b;
-            margin-left: 5px;
         }
 
         .weather-details {
@@ -341,6 +354,7 @@
             cursor: pointer;
             transition: background 0.2s;
             margin-top: 5px;
+            appearance: none;
             -webkit-appearance: none;
         }
 
@@ -427,7 +441,7 @@
 
         <div id="weather-panel">
             <div class="panel-header">
-                <h2>Tidsbaseret Ruteplanlægger</h2>
+                <h2>Se vejret på din rute</h2>
                 <small id="panel-summary" style="color: #64748b;">Afventer GPX-fil...</small>
                 
                 <div class="time-planner-box" id="time-planner-container" style="display: none;">
@@ -490,15 +504,31 @@
             }
         }
 
-        function translateSymbol(code) {
-            if (!code) return 'Skiftende vejr';
+        function getWeatherIconAndText(code) {
+            if (!code) return { icon: '✨', text: 'Skiftende vejr' };
+            
+            const isNight = code.endsWith('_night') || code.includes('polartwilight');
             const baseCode = code.split('_')[0];
-            const dict = {
-                'clearsky': 'Skyfrit', 'fair': 'Næsten skyfrit', 'partlycloudy': 'Halvskyet', 'cloudy': 'Skyet',
-                'rainshowers': 'Regnbyger', 'rain': 'Regn', 'heavyrain': 'Kraftig regn', 'lightrain': 'Let regn',
-                'snow': 'Sne', 'sleet': 'Slud', 'thunder': 'Torden'
+
+            const weatherDict = {
+                'clearsky': { day: '☀️', night: '🌙', text: 'Skyfrit' },
+                'fair': { day: '🌤️', night: '🌤️', text: 'Næsten skyfrit' },
+                'partlycloudy': { day: '⛅', night: '⛅', text: 'Halvskyet' },
+                'cloudy': { day: '☁️', night: '☁️', text: 'Skyet' },
+                'rainshowers': { day: '🌦️', night: '🌦️', text: 'Regnbyger' },
+                'rain': { day: '🌧️', night: '🌧️', text: 'Regn' },
+                'heavyrain': { day: '🌧️', night: '🌧️', text: 'Kraftig regn' },
+                'lightrain': { day: '🌦️', night: '🌦️', text: 'Let regn' },
+                'snow': { day: '❄️', night: '❄️', text: 'Sne' },
+                'sleet': { day: '🌨️', night: '🌨️', text: 'Slud' },
+                'thunder': { day: '⛈️', night: '⛈️', text: 'Torden' }
             };
-            return dict[baseCode] || 'Skiftende vejr';
+
+            const match = weatherDict[baseCode] || { day: '✨', night: '✨', text: 'Skiftende vejr' };
+            return {
+                icon: isNight ? match.night : match.day,
+                text: match.text
+            };
         }
 
         function getWindDirectionText(degrees) {
@@ -642,13 +672,18 @@
             const rain = (bestMatch.data.next_1_hours || bestMatch.data.next_6_hours) ? ((bestMatch.data.next_1_hours || bestMatch.data.next_6_hours).details.precipitation_amount || 0) : 0;
             const windDirText = getWindDirectionText(weather.wind_from_direction);
 
+            const weatherData = getWeatherIconAndText(symbolCode);
+
             contentDiv.innerHTML = `
                 <div class="weather-main">
-                    <span>${translateSymbol(symbolCode)}</span>
-                    <div class="weather-temp">${weather.air_temperature.toFixed(0)}°C</div>
+                    <span class="weather-icon">${weatherData.icon}</span>
+                    <div class="weather-text-block">
+                        <span class="weather-temp">${weather.air_temperature.toFixed(0)}°C</span>
+                        <span style="font-size: 13px; color: #475569;">${weatherData.text}</span>
+                    </div>
                 </div>
                 <div class="weather-details">
-                    Vind: <strong>${weather.wind_speed.toFixed(0)} m/s</strong> fra <strong>${windDirText}</strong><br>
+                    Vind: <strong>${weather.wind_speed.toFixed(0)} m/s</strong> fra ${windDirText}<br>
                     Nedbør: <strong>${rain.toFixed(1)} mm</strong>
                 </div>
             `;
@@ -777,6 +812,7 @@
             });
         }
 
+        // 4. Tilføjelse af punkter
         function addUserPoint(lat, lon) {
             userPointCount++;
             const fallbackName = `Brugerpunkt #${userPointCount}`;
@@ -918,9 +954,9 @@
 
         const fileInput = document.getElementById('gpx-file');
         if (fileInput) {
-            fileInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
+            fileInput.addEventListener('change', function() {
+                if (!fileInput.files || fileInput.files.length === 0) return;
+                const file = fileInput.files[0];
 
                 const reader = new FileReader();
                 reader.onload = function(evt) { parseAndDrawGPX(evt.target.result); };
@@ -930,11 +966,9 @@
 
         const closeBtn = document.getElementById('close-modal-btn');
         if (closeBtn) {
-            const handleClose = function(e) {
-                e.preventDefault();
+            closeBtn.addEventListener('click', function() {
                 closeGuide();
-            };
-            closeBtn.addEventListener('click', handleClose);
+            });
         }
 
         window.addEventListener('DOMContentLoaded', () => {
