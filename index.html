@@ -443,7 +443,9 @@
         // 2. Hjælpefunktioner
         function closeGuide() {
             const modal = document.getElementById('guide-modal');
-            if (modal) modal.style.display = 'none';
+            if (modal) {
+                modal.style.display = 'none';
+            }
         }
 
         function translateSymbol(code) {
@@ -671,7 +673,7 @@
                 container.innerHTML += cardHtml;
             }
 
-            // Slå KUN vejnavn op asynkront, hvis det er et brugerpunkt
+            // RETTET TIL HTTPS FOR ONLINE BRUG
             if (isUserAdded) {
                 const geocodeUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=16&addressdetails=1`;
                 fetch(geocodeUrl, { headers: { 'User-Agent': 'GPXWeatherPlannerLearningProject/1.0' } })
@@ -679,26 +681,22 @@
                 .then(geoData => {
                     let roadName = '';
                     if (geoData.address && geoData.address.road) {
-                        // Bruger udelukkende vejnavnet
                         roadName = geoData.address.road;
                     } else if (geoData.address) {
-                        // Backup hvis vejen ikke har et navn (f.eks. en skov eller sti), så bruges nærmeste sted/by-data
                         roadName = geoData.address.suburb || geoData.address.village || geoData.address.town || initialName;
                     } else {
                         roadName = initialName;
                     }
                     
-                    // Opdater kort-titlen
                     const titleEl = document.getElementById(`name-${cardId}`);
                     if (titleEl) titleEl.innerText = roadName;
                     
-                    // Opdater også tooltip på kortet
                     if (markerInstance) {
                         markerInstance.setTooltipContent(roadName);
                     }
                 })
                 .catch(() => {
-                    // Hvis stednavne-lookup fejler, beholder den bare sit standard "Brugerpunkt #X" navn
+                    // Fail-safe fallback
                 });
             }
 
@@ -871,9 +869,13 @@
             });
         }
 
+        // Ekstra robust lukke-event
         const closeBtn = document.getElementById('close-modal-btn');
         if (closeBtn) {
-            closeBtn.addEventListener('click', closeGuide);
+            closeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                closeGuide();
+            });
         }
 
         window.addEventListener('DOMContentLoaded', () => {
