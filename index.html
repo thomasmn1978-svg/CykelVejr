@@ -16,7 +16,6 @@
             --text: #1e293b;
             --border: #e2e8f0;
             --danger: #ef4444;
-            --success: #10b981;
         }
 
         body {
@@ -164,8 +163,7 @@
             height: 34px;
         }
 
-        .select-day { width: 50px; text-align: center; }
-        .select-month { width: 50px; text-align: center; }
+        .select-day, .select-month { width: 50px; text-align: center; }
         .select-year { width: 68px; text-align: center; }
         .select-time { width: 75px; text-align: center; margin-left: 4px; font-weight: bold; border-color: #cbd5e1 !important; }
 
@@ -350,22 +348,21 @@
             background: var(--primary-hover);
         }
 
-        /* 📱 MOBIL-KORREKTION: SIKRER AT BÅDE KORT OG PANELER ALTID HAR EN FAST DEL AF SKÆRMEN */
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
-                height: calc(100vh - 59px); /* Trækker headeren fra den samlede højde */
+                height: calc(100vh - 59px);
             }
 
             #map {
-                height: 35vh !important; /* Tvinger kortet til altid at være præcis 35% af skærmen */
+                height: 35vh !important;
                 width: 100%;
                 flex: none;
             }
 
             #weather-panel {
                 width: 100%;
-                height: 65vh !important; /* Tvinger panelet til at være præcis 65% af skærmen */
+                height: 65vh !important;
                 flex: none;
                 border-left: none;
                 border-top: 2px solid var(--border);
@@ -388,8 +385,6 @@
 
             .panel-content {
                 padding: 12px;
-                /* EKSTRA STOR BUFFER: Sikrer, at det allersidste kort (målet) kan 
-                   scrolles 150px op over bunden, så telefonsystemets menuer ikke dækker det */
                 padding-bottom: 150px !important; 
             }
 
@@ -412,7 +407,7 @@
             <ol>
                 <li><strong>Upload din GPX-rute</strong> via knappen øverst til højre.</li>
                 <li><strong>Tidsplan:</strong> Vælg dato samt start tidspunkt og hvornår du forventer at være i mål.</li>
-                <li><strong>Se vejrudsigten:</strong> Systemet beregner løbende vejret på de tidspunkter, du passerer depoterne samt start og mål.</li>
+                <li><strong>Se vejrudsigten:</strong> Systemet beregner løbende vejret på de tidspunkter, du passerer WayPoints (POIs) samt start og mål.</li>
                 <li><strong>Tilføj egne punkter:</strong> Klik på kortet for at tilføje ekstra punkter, og slet dem på det røde <span style="color:var(--danger); font-weight:bold;">×</span>.</li>
             </ol>
             <button class="modal-close-btn" id="close-modal-btn">Perfekt, lad mig starte!</button>
@@ -477,7 +472,7 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map);
 
         let currentRouteLayer = null;
-        let pioLayers = L.layerGroup().addTo(map);
+        const pioLayers = L.layerGroup().addTo(map);
         
         let globalWeatherData = {}; 
         let activePoiList = []; 
@@ -645,7 +640,6 @@
             const weather = bestMatch.data.instant.details;
             const symbolCode = (bestMatch.data.next_1_hours || bestMatch.data.next_6_hours) ? (bestMatch.data.next_1_hours || bestMatch.data.next_6_hours).summary.symbol_code : '';
             const rain = (bestMatch.data.next_1_hours || bestMatch.data.next_6_hours) ? ((bestMatch.data.next_1_hours || bestMatch.data.next_6_hours).details.precipitation_amount || 0) : 0;
-
             const windDirText = getWindDirectionText(weather.wind_from_direction);
 
             contentDiv.innerHTML = `
@@ -661,9 +655,7 @@
         }
 
         function updateAllPoiCards() {
-            activePoiList.forEach(poi => {
-                updateSinglePoiCard(poi.id);
-            });
+            activePoiList.forEach(poi => updateSinglePoiCard(poi.id));
         }
 
         function removeUserPoint(cardId) {
@@ -683,12 +675,9 @@
             if (!container) return;
 
             activePoiList.sort((a, b) => a.pct - b.pct);
-
             activePoiList.forEach(poi => {
-                let cardEl = document.getElementById(poi.id);
-                if (cardEl) {
-                    container.appendChild(cardEl);
-                }
+                const cardEl = document.getElementById(poi.id);
+                if (cardEl) container.appendChild(cardEl);
             });
         }
 
@@ -752,7 +741,6 @@
             }
 
             activePoiList.push({ id: cardId, lat: lat, lon: lon, pct: routePct, marker: finalMarker, type: type });
-
             refreshDOMList();
 
             if (type === 'user') {
@@ -771,10 +759,7 @@
                     
                     const titleEl = document.getElementById(`name-${cardId}`);
                     if (titleEl) titleEl.innerText = roadName;
-                    
-                    if (finalMarker) {
-                        finalMarker.setTooltipContent(roadName);
-                    }
+                    if (finalMarker) finalMarker.setTooltipContent(roadName);
                 })
                 .catch(() => {});
             }
@@ -806,7 +791,6 @@
             }).addTo(pioLayers);
 
             marker.bindTooltip(fallbackName, { permanent: true, direction: 'top', className: 'poi-label' });
-
             createPoiCardAndFetch(lat, lon, fallbackName, 'user', marker);
         }
 
@@ -888,14 +872,14 @@
                 for (let d = 1; d <= 31; d++) {
                     const opt = document.createElement('option');
                     opt.value = String(d).padStart(2, '0');
-                    opt.textContent = String(d).padStart(2, '0');
+                    opt.textContent = opt.value;
                     daySel.appendChild(opt);
                 }
 
                 for (let m = 1; m <= 12; m++) {
                     const opt = document.createElement('option');
                     opt.value = String(m).padStart(2, '0');
-                    opt.textContent = String(m).padStart(2, '0');
+                    opt.textContent = opt.value;
                     monthSel.appendChild(opt);
                 }
 
@@ -926,7 +910,6 @@
         // 5. Event Listeners
         map.on('click', function(e) {
             if (isGuideOpen) return;
-
             const panel = document.getElementById('weather-panel');
             if (panel && panel.classList.contains('open')) {
                 addUserPoint(e.latlng.lat, e.latlng.lng);
@@ -949,12 +932,9 @@
         if (closeBtn) {
             const handleClose = function(e) {
                 e.preventDefault();
-                e.stopPropagation(); 
                 closeGuide();
             };
-            
             closeBtn.addEventListener('click', handleClose);
-            closeBtn.addEventListener('touchstart', handleClose, { passive: false });
         }
 
         window.addEventListener('DOMContentLoaded', () => {
