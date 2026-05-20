@@ -27,7 +27,7 @@
     <h3>Rute Vejr</h3>
     <div class="input-group"><label>Dato: <input type="text" id="dateInput" onchange="renderList();"></label></div>
     <div class="input-group"><label>Starttid: <input type="text" id="startTime" onchange="renderList();"></label></div>
-    <div class="input-group"><label>Gns. fart (km/t): <input type="number" id="speedInput" value="30" onchange="calcEndFromSpeed();"></label></div>
+    <div class="input-group"><label>Forventet gns. fart (km/t): <input type="number" id="speedInput" value="30" onchange="calcEndFromSpeed();"></label></div>
     <div class="input-group"><label>Sluttid: <input type="text" id="endTime" onchange="calcSpeedFromEnd();"></label></div>
     <label class="btn-upload">Upload GPX fil<input type="file" id="gpx" hidden accept=".gpx"></label>
     <div id="list"></div>
@@ -90,7 +90,6 @@
                     const d1 = ts.data.next_1_hours || ts.data.next_6_hours;
                     const inst = ts.data.instant.details;
                     
-                    // Robust mapping til Weatherbit ikoner
                     const code = d1.summary.symbol_code.replace(/_day|_night/, '');
                     const iconMap = { 'clearsky': 'c01d', 'cloudy': 'c04d', 'fair': 'c02d', 'partlycloudy': 'c03d', 'rain': 'r01d', 'lightsnow': 's01d', 'snow': 's02d', 'fog': 'a05d' };
                     const iconCode = iconMap[code] || 'c01d';
