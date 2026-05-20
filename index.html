@@ -7,22 +7,21 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root { --bg: #0f172a; --panel: rgba(30, 41, 59, 0.98); --text: #f1f5f9; --card: #1e293b; --accent: #818cf8; --border: #334155; --danger: #ef4444; }
-        body, html { margin: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+        body, html { margin: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
         #map { height: 100%; width: 100%; z-index: 1; }
-        
-        #panel { position: absolute; bottom: 0; right: 0; width: 100%; max-height: 50vh; background: var(--panel); border-radius: 20px 20px 0 0; z-index: 1000; padding: 20px; overflow-y: auto; border-top: 1px solid var(--border); box-sizing: border-box; }
-        
-        @media (min-width: 768px) {
-            #panel { top: 10px; right: 10px; width: 350px; max-height: 85vh; border-radius: 20px; border: 1px solid var(--border); }
-        }
-
-        .poi-card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); position: relative; }
-        .btn-upload { background: var(--accent); color: white; padding: 15px; border-radius: 12px; cursor: pointer; text-align: center; display: block; font-weight: bold; margin-bottom: 10px; font-size: 1em; }
-        .input-group { margin-bottom: 12px; font-size: 1em; }
-        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: white; font-size: 1em; box-sizing: border-box; }
-        .del-btn { position: absolute; top: 10px; right: 15px; cursor: pointer; color: var(--danger); font-size: 1.5em; font-weight: bold; }
-        .wind-alert { color: var(--danger); font-weight: bold; }
-        #modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.95); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+        #panel { position: absolute; bottom: 0; right: 0; width: 100%; max-height: 60vh; background: var(--panel); border-radius: 20px 20px 0 0; z-index: 1000; padding: 20px; overflow-y: auto; border-top: 1px solid var(--border); box-sizing: border-box; }
+        @media (min-width: 768px) { #panel { top: 10px; right: 10px; width: 380px; max-height: 90vh; border-radius: 20px; border: 1px solid var(--border); } }
+        .poi-card { background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; align-items: center; gap: 12px; position: relative; }
+        .weather-info-box { display: flex; flex-direction: column; align-items: center; min-width: 50px; }
+        .weather-emoji { font-size: 1.8em; }
+        .time-label { font-size: 0.85em; font-weight: bold; color: var(--accent); margin-top: 2px; }
+        .info { flex-grow: 1; font-size: 0.9em; line-height: 1.4; }
+        .btn-upload { background: var(--accent); color: white; padding: 12px; border-radius: 12px; cursor: pointer; text-align: center; display: block; font-weight: bold; margin-bottom: 15px; }
+        .input-group { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        input { width: 60%; padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: #0f172a; color: white; text-align: right; }
+        .del-btn { cursor: pointer; color: var(--danger); font-size: 1.5em; position: absolute; top: 5px; right: 10px; }
+        h3 { margin: 0 0 15px 0; }
+        #modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: var(--card); padding: 25px; border-radius: 20px; max-width: 400px; border: 1px solid var(--border); }
     </style>
 </head>
@@ -34,17 +33,17 @@
         <p>1. Upload GPX fil.</p>
         <p>2. Vælg tid og fart.</p>
         <p>3. Klik på kortet for at tilføje punkter.</p>
-        <button onclick="document.getElementById('modal').style.display='none'" class="btn-upload">Start</button>
+        <button onclick="document.getElementById('modal').style.display='none'" class="btn-upload">Forstået</button>
     </div>
 </div>
 
 <div id="map"></div>
 <div id="panel">
     <h3>Rute Vejr</h3>
-    <div class="input-group"><label>Dato: <input type="text" id="dateInput" onchange="renderList();"></label></div>
-    <div class="input-group"><label>Starttid: <input type="text" id="startTime" onchange="calcEndFromSpeed();"></label></div>
-    <div class="input-group"><label>Gns. fart (km/t): <input type="number" id="speedInput" onchange="calcEndFromSpeed();"></label></div>
-    <div class="input-group"><label>Sluttid: <input type="text" id="endTime" onchange="calcSpeedFromEnd();"></label></div>
+    <div class="input-group"><label>Dato:</label><input type="text" id="dateInput" onchange="renderList();"></div>
+    <div class="input-group"><label>Starttid:</label><input type="text" id="startTime" onchange="calcEndFromSpeed();"></div>
+    <div class="input-group"><label>Gns. fart (km/t):</label><input type="number" id="speedInput" onchange="calcEndFromSpeed();"></div>
+    <div class="input-group"><label>Sluttid:</label><input type="text" id="endTime" onchange="calcSpeedFromEnd();"></div>
     <label class="btn-upload">Upload GPX fil<input type="file" id="gpx" hidden accept=".gpx"></label>
     <div id="list"></div>
 </div>
@@ -53,13 +52,11 @@
 <script>
     const map = L.map('map').setView([56.0, 11.0], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
     let routeLayer = L.layerGroup().addTo(map);
     let pointCollection = [];
     let polylineCoords = [];
     let totalDist = 0;
-
-    const weatherMap = { 'clearsky': 'Solrigt', 'cloudy': 'Overskyet', 'fair': 'Klart', 'lightrain': 'Let regn', 'rain': 'Regn', 'heavyrain': 'Kraftig regn', 'partlycloudy': 'Delvist skyet' };
+    const emojiMap = { 'clearsky': '☀️', 'cloudy': '☁️', 'fair': '🌤️', 'partlycloudy': '⛅', 'lightrain': '🌦️', 'rain': '🌧️', 'heavyrain': '⛈️', 'snow': '❄️' };
 
     window.onload = () => {
         const d = new Date();
@@ -68,50 +65,45 @@
         document.getElementById('speedInput').value = '30';
     };
 
-    async function isDaytime(lat, lon, date) {
-        const dStr = date.toISOString().split('T')[0];
-        const res = await fetch(`https://api.met.no/weatherapi/sunrise/3.0/sun?lat=${lat}&lon=${lon}&date=${dStr}`);
-        const data = await res.json();
-        return date > new Date(data.properties.sunrise.time) && date < new Date(data.properties.sunset.time);
-    }
-
-    function getWindArrow(deg) {
-        const arrows = ['↓', '↙', '←', '↖', '↑', '↗', '→', '↘'];
-        return arrows[Math.round(deg / 45) % 8];
-    }
-
     async function renderList() {
         const list = document.getElementById('list'); list.innerHTML = '';
         const speed = parseFloat(document.getElementById('speedInput').value);
         const dateVal = document.getElementById('dateInput').value;
         const [h, m] = document.getElementById('startTime').value.split(':').map(Number);
-        
         pointCollection.sort((a, b) => a.dist - b.dist);
+        
         for (let p of pointCollection) {
             const mins = (h * 60) + m + (p.dist / speed * 60);
             const [d_in, m_in, y_in] = dateVal.split('-').map(Number);
             const target = new Date(y_in, m_in - 1, d_in, Math.floor(mins/60)%24, Math.floor(mins%60));
+            const timeStr = `${String(target.getHours()).padStart(2,'0')}:${String(target.getMinutes()).padStart(2,'0')}`;
             
             const card = document.createElement('div'); card.className = 'poi-card';
-            card.innerHTML = `${p.isUser ? '<span class="del-btn" onclick="removePoint('+p.id+')">×</span>' : ''}<strong>${p.name}</strong><br><small>Kl. ${String(target.getHours()).padStart(2,'0')}:${String(target.getMinutes()).padStart(2,'0')}</small><br><span class="weather">Henter data...</span>`;
+            card.innerHTML = `${p.isUser ? '<span class="del-btn" onclick="removePoint('+p.id+')">×</span>' : ''}
+                <div class="weather-info-box">
+                    <div class="weather-emoji" id="emoji-${p.id}">⏳</div>
+                    <div class="time-label">${timeStr}</div>
+                </div>
+                <div class="info"><strong>${p.name}</strong><br><small>Henter vejr...</small></div>`;
             list.appendChild(card);
             
             fetch(`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${p.lat}&lon=${p.lon}`, { headers: { 'User-Agent': 'GPXWeatherApp' } })
                 .then(r => r.json()).then(d => {
                     const forecast = d.properties.timeseries.find(t => new Date(t.time).toDateString() === target.toDateString());
                     if (!forecast) return;
-                    isDaytime(p.lat, p.lon, target).then(isDay => {
-                        const data = forecast.data;
-                        const gust = data.next_1_hours?.details?.wind_speed_of_gust || data.next_6_hours?.details?.wind_speed_of_gust || data.instant.details.wind_speed;
-                        const gustDisplay = gust.toFixed(1);
-                        card.querySelector('.weather').innerHTML = `${isDay ? '☀️' : '🌙'} ${weatherMap[data.next_1_hours?.summary.symbol_code.replace(/_day|_night/, '')] || 'Vejr'} <br> 🌡️ ${data.instant.details.air_temperature}°C | 💨 ${data.instant.details.wind_speed} m/s ${getWindArrow(data.instant.details.wind_from_direction)} <br> <span class="${gustDisplay > 10 ? 'wind-alert' : ''}">Vindstød: ${gustDisplay} m/s</span>`;
-                    });
+                    const data = forecast.data;
+                    const wind = data.instant.details.wind_speed;
+                    const gust = data.next_1_hours?.details?.wind_speed_of_gust || wind;
+                    const code = data.next_1_hours?.summary.symbol_code.replace(/_day|_night/, '') || 'cloudy';
+                    document.getElementById(`emoji-${p.id}`).innerHTML = emojiMap[code] || '☁️';
+                    card.querySelector('.info').innerHTML = `<strong>${p.name}</strong><br><small>🌡️ ${data.instant.details.air_temperature}°C | 💨 ${wind} m/s (${gust} m/s i stød)</small>`;
                 });
         }
     }
 
     function calcEndFromSpeed() {
         const speed = parseFloat(document.getElementById('speedInput').value);
+        if (!speed || totalDist === 0) return;
         const [h, m] = document.getElementById('startTime').value.split(':').map(Number);
         const totalMins = (h * 60) + m + (totalDist / speed * 60);
         document.getElementById('endTime').value = `${String(Math.floor(totalMins/60)%24).padStart(2,'0')}:${String(Math.floor(totalMins%60)).padStart(2,'0')}`;
@@ -128,16 +120,14 @@
 
     async function addPoint(lat, lon, name = null, isUser = false) {
         if (isUser && pointCollection.some(p => Math.abs(p.lat - lat) < 0.001 && Math.abs(p.lon - lon) < 0.001)) return;
-        
         let pointName = name;
         if (isUser && !name) {
             try {
                 const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16`);
                 const data = await res.json();
-                pointName = data.address?.road || data.address?.village || data.address?.city || "Punkt";
-            } catch (e) { pointName = "Punkt"; }
+                pointName = data.address?.road || "Punkt";
+            } catch(e) { pointName = "Punkt"; }
         }
-        
         const marker = L.marker([lat, lon], { draggable: true }).addTo(routeLayer);
         let dist = 0;
         if(polylineCoords.length > 0) {
@@ -145,52 +135,26 @@
             polylineCoords.forEach((p, i) => { const d = L.latLng(p).distanceTo([lat, lon]); if(d < minD) { minD = d; idx = i; } });
             for(let i=0; i<idx; i++) dist += L.latLng(polylineCoords[i]).distanceTo(polylineCoords[i+1]);
         }
-        
         const p = { id: Date.now()+Math.random(), lat, lon, name: pointName, isUser, dist: dist/1000, marker };
         pointCollection.push(p);
-        marker.on('dragend', async () => { 
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${marker.getLatLng().lat}&lon=${marker.getLatLng().lng}&zoom=16`);
-            const data = await res.json();
-            p.name = data.address?.road || "Punkt";
-            p.lat = marker.getLatLng().lat; 
-            p.lon = marker.getLatLng().lng; 
-            renderList(); 
-        });
+        marker.on('dragend', async () => { p.lat = marker.getLatLng().lat; p.lon = marker.getLatLng().lng; renderList(); });
         renderList();
     }
 
-    function removePoint(id) { 
-        const p = pointCollection.find(x => x.id === id); 
-        routeLayer.removeLayer(p.marker); 
-        pointCollection = pointCollection.filter(x => x.id !== id); 
-        renderList(); 
-    }
+    function removePoint(id) { const p = pointCollection.find(x => x.id === id); routeLayer.removeLayer(p.marker); pointCollection = pointCollection.filter(x => x.id !== id); renderList(); }
 
     document.getElementById('gpx').addEventListener('change', async function(e) {
         routeLayer.clearLayers(); pointCollection = [];
         const xml = new DOMParser().parseFromString(await e.target.files[0].text(), "text/xml");
-        
         polylineCoords = Array.from(xml.getElementsByTagName("trkpt")).map(p => [parseFloat(p.getAttribute("lat")), parseFloat(p.getAttribute("lon"))]);
         totalDist = 0;
         for(let i=0; i<polylineCoords.length-1; i++) totalDist += L.latLng(polylineCoords[i]).distanceTo(polylineCoords[i+1]);
         totalDist /= 1000;
         L.polyline(polylineCoords, {color: '#818cf8'}).addTo(routeLayer);
-        
-        const padding = window.innerWidth < 768 ? [0, 300] : [400, 0];
-        map.fitBounds(L.polyline(polylineCoords).getBounds(), { paddingBottomRight: padding });
-        
+        map.fitBounds(L.polyline(polylineCoords).getBounds(), { paddingBottomRight: window.innerWidth < 768 ? [0, 300] : [400, 0] });
         addPoint(polylineCoords[0][0], polylineCoords[0][1], "Start");
         addPoint(polylineCoords[polylineCoords.length-1][0], polylineCoords[polylineCoords.length-1][1], "Mål");
-        
-        const waypoints = xml.getElementsByTagName("wpt");
-        for (let wpt of waypoints) {
-            const lat = parseFloat(wpt.getAttribute("lat"));
-            const lon = parseFloat(wpt.getAttribute("lon"));
-            const isDuplicate = pointCollection.some(p => L.latLng(p.lat, p.lon).distanceTo([lat, lon]) < 50);
-            if (!isDuplicate) {
-                addPoint(lat, lon, wpt.getElementsByTagName("name")[0]?.textContent || "Waypoint", false);
-            }
-        }
+        Array.from(xml.getElementsByTagName("wpt")).forEach(wpt => addPoint(parseFloat(wpt.getAttribute("lat")), parseFloat(wpt.getAttribute("lon")), wpt.getElementsByTagName("name")[0]?.textContent || "Waypoint", false));
         calcEndFromSpeed();
     });
 
