@@ -12,7 +12,7 @@
         #panel { position: absolute; top: 10px; right: 10px; width: 380px; max-height: 95vh; background: var(--panel); backdrop-filter: blur(20px); border-radius: 20px; z-index: 1000; padding: 15px; overflow-y: auto; border: 1px solid var(--border); box-shadow: -5px 0 15px rgba(0,0,0,0.3); }
         .poi-card { background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--accent); }
         .weather-grid { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; margin-top: 8px; font-size: 0.9em; }
-        .weather-icon { width: 40px; height: 40px; }
+        .weather-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; padding: 2px; }
         .weather-data { display: flex; flex-direction: column; gap: 2px; }
         .btn-upload { background: var(--accent); color: white; padding: 10px; border-radius: 8px; cursor: pointer; text-align: center; display: block; font-weight: bold; margin-bottom: 10px; }
         .input-group { margin-bottom: 8px; font-size: 0.9em; }
@@ -89,16 +89,22 @@
                     if (!ts) return;
                     const d1 = ts.data.next_1_hours || ts.data.next_6_hours;
                     const inst = ts.data.instant.details;
-                    const symbolCode = d1.summary.symbol_code;
-                    const dir = inst.wind_from_direction;
                     
+                    // Robust mapping til Weatherbit ikoner
+                    const code = d1.summary.symbol_code.replace(/_day|_night/, '');
+                    const iconMap = { 'clearsky': 'c01d', 'cloudy': 'c04d', 'fair': 'c02d', 'partlycloudy': 'c03d', 'rain': 'r01d', 'lightsnow': 's01d', 'snow': 's02d', 'fog': 'a05d' };
+                    const iconCode = iconMap[code] || 'c01d';
+                    
+                    const dir = inst.wind_from_direction;
                     document.getElementById(`w-${p.id}`).innerHTML = 
-                        `<img src="https://api.met.no/weatherapi/weathericons/2.0/?symbol=${symbolCode}&content_type=image/png" class="weather-icon" alt="Vejr">
+                        `<img src="https://www.weatherbit.io/static/img/icons/${iconCode}.png" class="weather-icon" alt="Vejr">
                          <div class="weather-data">
                             <span>${inst.air_temperature}°C | ${d1.details.precipitation_amount || 0}mm</span>
                             <span>Vind: ${inst.wind_speed.toFixed(0)} m/s <span style="transform:rotate(${dir}deg); display:inline-block">↑</span></span>
                          </div>`;
-                }).catch(() => { document.getElementById(`w-${p.id}`).innerHTML = "Kunne ikke hente vejr"; });
+                }).catch(() => {
+                    document.getElementById(`w-${p.id}`).innerHTML = "Kunne ikke hente vejrdata";
+                });
         }
     }
 
