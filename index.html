@@ -35,8 +35,8 @@
 <div id="panel">
     <h3 style="margin-top:0">Rute Vejr</h3>
     <div id="route-info" style="font-size: 0.9em; margin-bottom: 10px; color: var(--accent);"></div>
-    <div class="input-group"><label>Start dato</label><input type="text" id="startDate" onchange="calcEndFromSpeed()"></div>
-    <div class="input-group"><label>Start tid</label><input type="text" id="startTime" onchange="calcEndFromSpeed()"></div>
+    <div class="input-group"><label>Start dato</label><input type="date" id="startDate" onchange="validateDate(); calcEndFromSpeed()"></div>
+    <div class="input-group"><label>Start tid</label><input type="time" id="startTime" onchange="calcEndFromSpeed()"></div>
     <div class="input-group"><label>Fart km/t</label><input type="number" id="speedInput" value="30" onchange="calcEndFromSpeed()"></div>
     <div class="input-group"><label>Slut dato</label><input type="text" id="endDate" readonly></div>
     <div class="input-group"><label>Slut tid</label><input type="text" id="endTime" readonly></div>
@@ -53,8 +53,14 @@
     let routeLayer = L.layerGroup().addTo(map);
     let pointCollection = [], polylineCoords = [], totalDist = 0;
 
+    function validateDate() {
+        const input = document.getElementById('startDate');
+        const today = new Date().toISOString().split('T')[0];
+        if(input.value < today) input.value = today;
+    }
+
     function parseDatoTid(dStr, tStr) {
-        const [d, m, y] = dStr.split('-').map(Number);
+        const [y, m, d] = dStr.split('-').map(Number);
         const [hh, mm] = tStr.split(':').map(Number);
         return new Date(y, m - 1, d, hh, mm);
     }
@@ -69,10 +75,10 @@
 
     window.onload = () => {
         const now = new Date();
-        const d = String(now.getDate()).padStart(2,'0'), m = String(now.getMonth()+1).padStart(2,'0'), y = now.getFullYear();
-        const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
-        document.getElementById('startDate').value = `${d}-${m}-${y}`;
-        document.getElementById('startTime').value = `${hh}:${mm}`;
+        const today = now.toISOString().split('T')[0];
+        document.getElementById('startDate').setAttribute('min', today);
+        document.getElementById('startDate').value = today;
+        document.getElementById('startTime').value = "10:00";
     };
 
     async function addPoint(lat, lon, name = null, isUser = false, forceDist = null) {
@@ -117,8 +123,10 @@
                         const rain = pData.precipitation_amount !== undefined ? ` | 💧 ${pData.precipitation_amount}mm` : "";
                         const wind = `${d.wind_speed} m/s ${d.wind_speed_of_gust ? `(${d.wind_speed_of_gust} m/s)` : ""}`;
                         document.getElementById(`w-${p.id}`).innerHTML = `🌡️ ${d.air_temperature}°C | 💨 ${wind} <span class="wind-indicator" style="transform:rotate(${d.wind_from_direction}deg)">➤</span>${rain}`;
+                    } else {
+                        document.getElementById(`w-${p.id}`).innerHTML = "⚠️ Vejrdata ikke tilgængelig for dette tidspunkt";
                     }
-                });
+                }).catch(() => { document.getElementById(`w-${p.id}`).innerHTML = "⚠️ Fejl ved hentning af vejr"; });
         }
     }
 
@@ -127,7 +135,7 @@
         const speed = parseFloat(document.getElementById('speedInput').value);
         const start = parseDatoTid(document.getElementById('startDate').value, document.getElementById('startTime').value);
         const end = new Date(start.getTime() + (totalDist / speed * 3600000));
-        document.getElementById('endDate').value = `${String(end.getDate()).padStart(2,'0')}-${String(end.getMonth()+1).padStart(2,'0')}-${end.getFullYear()}`;
+        document.getElementById('endDate').value = end.toISOString().split('T')[0];
         document.getElementById('endTime').value = `${String(end.getHours()).padStart(2,'0')}:${String(end.getMinutes()).padStart(2,'0')}`;
         renderList();
     }
