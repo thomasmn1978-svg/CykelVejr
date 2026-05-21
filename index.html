@@ -101,7 +101,7 @@
             const d = String(target.getDate()).padStart(2, '0'), m = String(target.getMonth() + 1).padStart(2, '0');
             const hh = String(target.getHours()).padStart(2, '0'), mm = String(target.getMinutes()).padStart(2, '0');
             
-            card.innerHTML = `${p.isUser ? '<span class="del-btn" onclick="removePoint('+p.id+')">×</span>' : ''}<strong>${p.name}</strong><br><small>${p.dist.toFixed(1)} km inde</small><br><small>${d}/${m} ${hh}:${mm}</small><div id="w-${p.id}">Henter...</div>`;
+            card.innerHTML = `${p.isUser ? '<span class="del-btn" onclick="removePoint('+p.id+')">×</span>' : ''}<strong>${p.name}</strong><br><small>${p.dist.toFixed(1)} km</small><br><small>${d}/${m} ${hh}:${mm}</small><div id="w-${p.id}">Henter...</div>`;
             list.appendChild(card);
             
             fetch(`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${p.lat}&lon=${p.lon}`, { headers: { 'User-Agent': 'GPXWeatherApp' } })
@@ -112,7 +112,7 @@
                         const gust = d.wind_speed_of_gust ? `(${d.wind_speed_of_gust} m/s)` : "";
                         const content = `<div style="border-top:1px solid #334155; margin-top:5px; padding-top:5px;">🌡️ ${d.air_temperature}°C | 💨 ${d.wind_speed} m/s ${gust} <span class="wind-indicator" style="transform:rotate(${d.wind_from_direction}deg)">➤</span></div>`;
                         document.getElementById(`w-${p.id}`).innerHTML = content;
-                        p.marker.setPopupContent(`<b>${p.name}</b><br>${p.dist.toFixed(1)} km inde<br>${content}`);
+                        p.marker.setPopupContent(`<b>${p.name}</b><br>${p.dist.toFixed(1)} km<br>${content}`);
                     }
                 });
         }
