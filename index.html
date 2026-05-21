@@ -16,8 +16,9 @@
         input { padding: 8px; border-radius: 5px; border: 1px solid var(--border); background: var(--card); color: white; }
         .del-btn { float: right; cursor: pointer; color: var(--danger); font-weight: bold; }
         .wind-indicator { display: inline-block; font-size: 1.2em; font-weight: bold; color: #fbbf24; margin-left: 8px; transition: transform 0.3s; text-shadow: 0 0 5px rgba(0,0,0,0.5); }
-        /* Velkomst-popup styling */
         #welcome-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); padding: 25px; border-radius: 15px; z-index: 2000; border: 2px solid var(--accent); text-align: center; max-width: 400px; }
+        /* Mobil-specifik justering */
+        @media (max-width: 600px) { #panel { width: 95%; right: 2.5%; } }
     </style>
 </head>
 <body>
@@ -31,6 +32,7 @@
 <div id="map"></div>
 <div id="panel">
     <h3 style="margin-top:0">Rute Vejr</h3>
+    <div id="route-info" style="font-size: 0.9em; margin-bottom: 10px; color: var(--accent);"></div>
     <div class="input-group"><label>Start dato</label><input type="text" id="startDate" onchange="calcEndFromSpeed()"></div>
     <div class="input-group"><label>Start tid</label><input type="text" id="startTime" onchange="calcEndFromSpeed()"></div>
     <div class="input-group"><label>Fart km/t</label><input type="number" id="speedInput" value="30" onchange="calcEndFromSpeed()"></div>
@@ -48,6 +50,11 @@
 
     let routeLayer = L.layerGroup().addTo(map);
     let pointCollection = [], polylineCoords = [], totalDist = 0;
+
+    function scrollToBottom() {
+        const panel = document.getElementById('panel');
+        panel.scrollTop = panel.scrollHeight;
+    }
 
     function parseDatoTid(dStr, tStr) {
         const [d, m, y] = dStr.split('-').map(Number);
@@ -85,11 +92,7 @@
         }
         pointCollection.push({ id: Date.now()+Math.random(), lat, lon, name: displayName, isUser, dist: dist/1000, marker });
         calcEndFromSpeed();
-        
-        setTimeout(() => {
-            const panel = document.getElementById('panel');
-            panel.scrollTop = panel.scrollHeight;
-        }, 500);
+        setTimeout(scrollToBottom, 300);
     }
 
     async function renderList() {
@@ -104,7 +107,7 @@
             const d = String(target.getDate()).padStart(2, '0'), m = String(target.getMonth() + 1).padStart(2, '0');
             const hh = String(target.getHours()).padStart(2, '0'), mm = String(target.getMinutes()).padStart(2, '0');
             
-            card.innerHTML = `${p.isUser ? '<span class="del-btn" onclick="removePoint('+p.id+')">×</span>' : ''}<strong>${p.name}</strong><br><small>${d}/${m}-${target.getFullYear()} ${hh}:${mm}</small><div id="w-${p.id}">Henter vejr...</div>`;
+            card.innerHTML = `${p.isUser ? '<span class="del-btn" onclick="removePoint('+p.id+')">×</span>' : ''}<strong>${p.name}</strong><br><small>${p.dist.toFixed(1)} km inde på ruten</small><br><small>${d}/${m}-${target.getFullYear()} ${hh}:${mm}</small><div id="w-${p.id}">Henter vejr...</div>`;
             list.appendChild(card);
             
             fetch(`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${p.lat}&lon=${p.lon}`, { headers: { 'User-Agent': 'GPXWeatherApp' } })
@@ -123,7 +126,7 @@
                                 🌧️ Nedbør: <strong>${prec} mm/t</strong>
                             </div>`;
                         document.getElementById(`w-${p.id}`).innerHTML = content;
-                        p.marker.setPopupContent(`<b>${p.name}</b><br>${content}`);
+                        p.marker.setPopupContent(`<b>${p.name}</b><br>${p.dist.toFixed(1)} km inde<br>${content}`);
                     }
                 });
         });
@@ -151,10 +154,11 @@
         totalDist = 0;
         for(let i=0; i<polylineCoords.length-1; i++) totalDist += L.latLng(polylineCoords[i]).distanceTo(polylineCoords[i+1]);
         totalDist /= 1000;
+        document.getElementById('route-info').innerText = `Samlet rute: ${totalDist.toFixed(1)} km`;
         const poly = L.polyline(polylineCoords, {color: '#818cf8'}).addTo(routeLayer);
         map.fitBounds(poly.getBounds());
-        addPoint(polylineCoords[0][0], polylineCoords[0][1], "Start");
-        addPoint(polylineCoords.at(-1)[0], polylineCoords.at(-1)[1], "Mål");
+        await addPoint(polylineCoords[0][0], polylineCoords[0][1], "Start");
+        await addPoint(polylineCoords.at(-1)[0], polylineCoords.at(-1)[1], "Mål");
     });
 
     map.on('click', (e) => {
