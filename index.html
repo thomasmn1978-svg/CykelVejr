@@ -75,18 +75,19 @@
         document.getElementById('startTime').value = `${hh}:${mm}`;
     };
 
-    async function addPoint(lat, lon, name = null, isUser = false) {
+    async function addPoint(lat, lon, name = null, isUser = false, forceDist = null) {
         const displayName = name || await getLocName(lat, lon);
         const marker = L.marker([lat, lon]).addTo(routeLayer);
         
-        let dist = 0;
-        if(polylineCoords.length > 0) {
+        let dist = forceDist !== null ? forceDist : 0;
+        if(forceDist === null && polylineCoords.length > 0) {
             let minD = Infinity; let idx = 0;
             polylineCoords.forEach((pt, i) => { const d = L.latLng(pt).distanceTo([lat, lon]); if(d < minD) { minD = d; idx = i; } });
             for(let i=0; i<idx; i++) dist += L.latLng(polylineCoords[i]).distanceTo(polylineCoords[i+1]);
+            dist /= 1000;
         }
         
-        pointCollection.push({ id: Date.now()+Math.random(), lat, lon, name: displayName, isUser, dist: dist/1000, marker });
+        pointCollection.push({ id: Date.now()+Math.random(), lat, lon, name: displayName, isUser, dist, marker });
         pointCollection.sort((a, b) => a.dist - b.dist);
         
         calcEndFromSpeed();
@@ -113,8 +114,7 @@
                     if (ts) {
                         const d = ts.data.instant.details;
                         const gust = d.wind_speed_of_gust ? `(${d.wind_speed_of_gust} m/s)` : "";
-                        const content = `<div style="border-top:1px solid #334155; margin-top:5px; padding-top:5px;">🌡️ ${d.air_temperature}°C | 💨 ${d.wind_speed} m/s ${gust} <span class="wind-indicator" style="transform:rotate(${d.wind_from_direction}deg)">➤</span></div>`;
-                        document.getElementById(`w-${p.id}`).innerHTML = content;
+                        document.getElementById(`w-${p.id}`).innerHTML = `🌡️ ${d.air_temperature}°C | 💨 ${d.wind_speed} m/s ${gust} <span class="wind-indicator" style="transform:rotate(${d.wind_from_direction}deg)">➤</span>`;
                     }
                 });
         }
@@ -146,15 +146,15 @@
         L.polyline(polylineCoords, {color: '#818cf8'}).addTo(routeLayer);
         map.fitBounds(L.polyline(polylineCoords).getBounds());
         
-        await addPoint(polylineCoords[0][0], polylineCoords[0][1], "Start");
-        await addPoint(polylineCoords[polylineCoords.length - 1][0], polylineCoords[polylineCoords.length - 1][1], "Mål");
+        await addPoint(polylineCoords[0][0], polylineCoords[0][1], "Start", false, 0);
+        await addPoint(polylineCoords[polylineCoords.length - 1][0], polylineCoords[polylineCoords.length - 1][1], "Mål", false, totalDist);
     });
 
     map.on('click', (e) => {
         if(polylineCoords.length === 0) return;
         let minD = Infinity; let snapped = polylineCoords[0];
         polylineCoords.forEach(p => { const d = L.latLng(p).distanceTo(e.latlng); if(d < minD) { minD = d; snapped = p; } });
-        addPoint(snapped[0], snapped[1]);
+        addPoint(snapped[0], snapped[1], null, true);
     });
 </script>
 </body>
