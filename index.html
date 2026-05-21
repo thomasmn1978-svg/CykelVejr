@@ -8,23 +8,23 @@
     <style>
         :root { --bg: #0f172a; --panel: rgba(30, 41, 59, 0.98); --text: #f1f5f9; --card: #1e293b; --accent: #818cf8; --border: #334155; --danger: #ef4444; }
         body, html { margin: 0; height: 100%; font-family: sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
-        #map { height: 100%; width: 100%; z-index: 1; }
+        #map { height: 100%; width: 100%; }
         #panel { position: absolute; top: 10px; right: 10px; width: 350px; max-height: 85vh; background: var(--panel); backdrop-filter: blur(20px); border-radius: 20px; z-index: 1000; padding: 15px; overflow-y: auto; border: 1px solid var(--border); box-shadow: -5px 0 15px rgba(0,0,0,0.3); }
-        .poi-card { background: var(--card); padding: 10px; border-radius: 12px; margin-bottom: 8px; border-left: 4px solid var(--accent); font-size: 0.85em; }
-        .btn-upload { background: var(--accent); color: white; padding: 10px; border-radius: 8px; cursor: pointer; text-align: center; display: block; font-weight: bold; margin: 10px 0; }
-        .input-group { margin-bottom: 8px; font-size: 0.9em; display: grid; grid-template-columns: 80px 1fr; align-items: center; }
-        input { padding: 6px; border-radius: 5px; border: 1px solid var(--border); background: var(--card); color: white; width: 100%; box-sizing: border-box; }
+        .poi-card { background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--accent); font-size: 0.85em; }
+        .btn-upload { background: var(--accent); color: white; padding: 10px; border-radius: 8px; cursor: pointer; text-align: center; display: block; font-weight: bold; margin: 15px 0; }
+        .input-group { margin-bottom: 10px; font-size: 0.9em; display: grid; grid-template-columns: 80px 1fr; align-items: center; }
+        input { padding: 8px; border-radius: 5px; border: 1px solid var(--border); background: var(--card); color: white; width: 100%; box-sizing: border-box; }
         .del-btn { float: right; cursor: pointer; color: var(--danger); font-weight: bold; }
-        .wind-indicator { display: inline-block; font-size: 1.2em; font-weight: bold; color: #fbbf24; margin-left: 5px; transition: transform 0.3s; }
+        .wind-indicator { display: inline-block; font-size: 1.2em; font-weight: bold; color: #fbbf24; margin-left: 8px; transition: transform 0.3s; }
         #welcome-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); padding: 25px; border-radius: 15px; z-index: 2000; border: 2px solid var(--accent); text-align: center; width: 85%; max-width: 400px; }
-        @media (max-width: 600px) { #panel { width: 90% !important; right: 5% !important; left: 5% !important; max-height: 70vh; } }
+        @media (max-width: 600px) { #panel { width: 90% !important; right: 5% !important; left: 5% !important; max-height: 40vh; } }
     </style>
 </head>
 <body>
 
 <div id="welcome-popup">
     <h3>Velkommen til Rute Vejr</h3>
-    <p>1. Upload GPX-fil.<br>2. Indtast dato, tid og fart.<br>3. Klik på kortet for punkter.</p>
+    <p>1. Upload GPX-fil.<br>2. Indtast startdato, tid og fart.<br>3. Klik på kortet for at tilføje punkter.</p>
     <button class="btn-upload" style="margin: 0 auto; width: 100px;" onclick="document.getElementById('welcome-popup').style.display='none'">Forstået</button>
 </div>
 
@@ -143,6 +143,7 @@
         document.getElementById('route-info').innerText = `Samlet rute: ${totalDist.toFixed(1)} km`;
         L.polyline(polylineCoords, {color: '#818cf8'}).addTo(routeLayer);
         map.fitBounds(L.polyline(polylineCoords).getBounds());
+        
         await addPoint(polylineCoords[0][0], polylineCoords[0][1], "Start");
         await addPoint(polylineCoords[polylineCoords.length - 1][0], polylineCoords[polylineCoords.length - 1][1], "Mål");
         calcEndFromSpeed();
