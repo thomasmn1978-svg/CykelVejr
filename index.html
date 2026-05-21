@@ -14,6 +14,8 @@
         .btn-upload { background: var(--accent); color: white; padding: 10px; border-radius: 8px; cursor: pointer; text-align: center; display: block; font-weight: bold; margin: 15px 0; }
         .input-group { margin-bottom: 10px; font-size: 0.9em; display: grid; grid-template-columns: 80px 1fr; align-items: center; }
         input { padding: 8px; border-radius: 5px; border: 1px solid var(--border); background: var(--card); color: white; width: 100%; box-sizing: border-box; }
+        /* Skjuler native picker for at tillade custom format, men beholder layout */
+        input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
         .del-btn { float: right; cursor: pointer; color: var(--danger); font-weight: bold; }
         .wind-indicator { display: inline-block; font-size: 1.2em; font-weight: bold; color: #fbbf24; margin-left: 8px; transition: transform 0.3s; }
         #welcome-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); padding: 25px; border-radius: 15px; z-index: 2000; border: 2px solid var(--accent); text-align: left; width: 85%; max-width: 400px; }
@@ -27,7 +29,7 @@
 
 <div id="welcome-popup">
     <h3>Sådan bruger du siden 🚴‍♂️🌦️</h3>
-    <p>1. <b>Start:</b> Upload din GPX-rute.<br><br>2. <b>Tidsplan:</b> Vælg dato, starttid og forventet gns.fart.<br><br>3. <b>Interaktion:</b> Start og mål tilføjes automatisk. Klik de steder på kortet, hvor du ønsker at få vejrudsigten.<br><br>4. <b>Vejr:</b> Systemet tilføjer automatisk vejrudsigten (YR.no) for alle punkter på det tidpunkt, du forventes at passere punktet.</p>
+    <p>1. <b>Start:</b> Upload din GPX-rute.<br><br>2. <b>Tidsplan:</b> Vælg dato (dd-mm-åååå) og starttid (tt:mm).<br><br>3. <b>Interaktion:</b> Start og mål tilføjes automatisk. Klik de steder på kortet, hvor du ønsker at få vejrudsigten.<br><br>4. <b>Vejr:</b> Systemet tilføjer automatisk vejrudsigten (YR.no) for alle punkter på det tidspunkt, du forventes at passere punktet.</p>
     <button class="btn-upload" style="margin: 0 auto; width: 100px;" onclick="document.getElementById('welcome-popup').style.display='none'">Forstået</button>
 </div>
 
@@ -35,7 +37,7 @@
 <div id="panel">
     <h3 style="margin-top:0">Rute Vejr</h3>
     <div id="route-info" style="font-size: 0.9em; margin-bottom: 10px; color: var(--accent);"></div>
-    <div class="input-group"><label>Start dato</label><input type="date" id="startDate" onchange="validateDate(); calcEndFromSpeed()"></div>
+    <div class="input-group"><label>Start dato</label><input type="date" id="startDate" onchange="calcEndFromSpeed()"></div>
     <div class="input-group"><label>Start tid</label><input type="time" id="startTime" onchange="calcEndFromSpeed()"></div>
     <div class="input-group"><label>Fart km/t</label><input type="number" id="speedInput" value="30" onchange="calcEndFromSpeed()"></div>
     <div class="input-group"><label>Slut dato</label><input type="text" id="endDate" readonly></div>
@@ -53,15 +55,10 @@
     let routeLayer = L.layerGroup().addTo(map);
     let pointCollection = [], polylineCoords = [], totalDist = 0;
 
-    function validateDate() {
-        const input = document.getElementById('startDate');
-        const today = new Date().toISOString().split('T')[0];
-        if(input.value < today) input.value = today;
-    }
-
-    function parseDatoTid(dStr, tStr) {
-        const [y, m, d] = dStr.split('-').map(Number);
-        const [hh, mm] = tStr.split(':').map(Number);
+    function parseDatoTid(dVal, tVal) {
+        // Håndterer input værdier fra HTML5 date/time inputs
+        const [y, m, d] = dVal.split('-').map(Number);
+        const [hh, mm] = tVal.split(':').map(Number);
         return new Date(y, m - 1, d, hh, mm);
     }
 
@@ -75,10 +72,8 @@
 
     window.onload = () => {
         const now = new Date();
-        const today = now.toISOString().split('T')[0];
-        document.getElementById('startDate').setAttribute('min', today);
-        document.getElementById('startDate').value = today;
-        document.getElementById('startTime').value = "10:00";
+        document.getElementById('startDate').value = now.toISOString().split('T')[0];
+        document.getElementById('startTime').value = String(now.getHours()).padStart(2,'0') + ":" + String(now.getMinutes()).padStart(2,'0');
     };
 
     async function addPoint(lat, lon, name = null, isUser = false, forceDist = null) {
@@ -108,10 +103,10 @@
         for(let p of pointCollection) {
             const target = new Date(start.getTime() + (p.dist / speed * 3600000));
             const card = document.createElement('div'); card.className = 'poi-card';
-            const d = String(target.getDate()).padStart(2, '0'), m = String(target.getMonth() + 1).padStart(2, '0');
+            const d = String(target.getDate()).padStart(2, '0'), m = String(target.getMonth() + 1).padStart(2, '0'), y = target.getFullYear();
             const hh = String(target.getHours()).padStart(2, '0'), mm = String(target.getMinutes()).padStart(2, '0');
             
-            card.innerHTML = `${p.isUser ? '<span class="del-btn" onclick="removePoint('+p.id+')">×</span>' : ''}<strong>${p.name} (${p.dist.toFixed(1)} km, ${d}/${m} ${hh}:${mm})</strong><div id="w-${p.id}">Henter...</div>`;
+            card.innerHTML = `${p.isUser ? '<span class="del-btn" onclick="removePoint('+p.id+')">×</span>' : ''}<strong>${p.name} (${p.dist.toFixed(1)} km, ${d}-${m}-${y} ${hh}:${mm})</strong><div id="w-${p.id}">Henter...</div>`;
             list.appendChild(card);
             
             fetch(`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${p.lat}&lon=${p.lon}`, { headers: { 'User-Agent': 'GPXWeatherApp' } })
@@ -124,9 +119,9 @@
                         const wind = `${d.wind_speed} m/s ${d.wind_speed_of_gust ? `(${d.wind_speed_of_gust} m/s)` : ""}`;
                         document.getElementById(`w-${p.id}`).innerHTML = `🌡️ ${d.air_temperature}°C | 💨 ${wind} <span class="wind-indicator" style="transform:rotate(${d.wind_from_direction}deg)">➤</span>${rain}`;
                     } else {
-                        document.getElementById(`w-${p.id}`).innerHTML = "⚠️ Vejrdata ikke tilgængelig for dette tidspunkt";
+                        document.getElementById(`w-${p.id}`).innerHTML = "⚠️ Vejrdata ikke tilgængelig";
                     }
-                }).catch(() => { document.getElementById(`w-${p.id}`).innerHTML = "⚠️ Fejl ved hentning af vejr"; });
+                }).catch(() => { document.getElementById(`w-${p.id}`).innerHTML = "⚠️ Fejl ved hentning"; });
         }
     }
 
@@ -135,7 +130,7 @@
         const speed = parseFloat(document.getElementById('speedInput').value);
         const start = parseDatoTid(document.getElementById('startDate').value, document.getElementById('startTime').value);
         const end = new Date(start.getTime() + (totalDist / speed * 3600000));
-        document.getElementById('endDate').value = end.toISOString().split('T')[0];
+        document.getElementById('endDate').value = `${String(end.getDate()).padStart(2,'0')}-${String(end.getMonth()+1).padStart(2,'0')}-${end.getFullYear()}`;
         document.getElementById('endTime').value = `${String(end.getHours()).padStart(2,'0')}:${String(end.getMinutes()).padStart(2,'0')}`;
         renderList();
     }
