@@ -78,7 +78,6 @@
     async function addPoint(lat, lon, name = null, isUser = false) {
         const displayName = name || await getLocName(lat, lon);
         const marker = L.marker([lat, lon]).addTo(routeLayer);
-        marker.bindPopup(`<b>${displayName}</b><br>Henter vejr...`);
         
         let dist = 0;
         if(polylineCoords.length > 0) {
@@ -86,9 +85,8 @@
             polylineCoords.forEach((pt, i) => { const d = L.latLng(pt).distanceTo([lat, lon]); if(d < minD) { minD = d; idx = i; } });
             for(let i=0; i<idx; i++) dist += L.latLng(polylineCoords[i]).distanceTo(polylineCoords[i+1]);
         }
-        pointCollection.push({ id: Date.now()+Math.random(), lat, lon, name: displayName, isUser, dist: dist/1000, marker });
         
-        // Sortering af listen med det samme
+        pointCollection.push({ id: Date.now()+Math.random(), lat, lon, name: displayName, isUser, dist: dist/1000, marker });
         pointCollection.sort((a, b) => a.dist - b.dist);
         
         calcEndFromSpeed();
@@ -117,7 +115,6 @@
                         const gust = d.wind_speed_of_gust ? `(${d.wind_speed_of_gust} m/s)` : "";
                         const content = `<div style="border-top:1px solid #334155; margin-top:5px; padding-top:5px;">🌡️ ${d.air_temperature}°C | 💨 ${d.wind_speed} m/s ${gust} <span class="wind-indicator" style="transform:rotate(${d.wind_from_direction}deg)">➤</span></div>`;
                         document.getElementById(`w-${p.id}`).innerHTML = content;
-                        p.marker.setPopupContent(`<b>${p.name}</b><br>${p.dist.toFixed(1)} km<br>${content}`);
                     }
                 });
         }
@@ -151,14 +148,13 @@
         
         await addPoint(polylineCoords[0][0], polylineCoords[0][1], "Start");
         await addPoint(polylineCoords[polylineCoords.length - 1][0], polylineCoords[polylineCoords.length - 1][1], "Mål");
-        calcEndFromSpeed();
     });
 
     map.on('click', (e) => {
         if(polylineCoords.length === 0) return;
         let minD = Infinity; let snapped = polylineCoords[0];
         polylineCoords.forEach(p => { const d = L.latLng(p).distanceTo(e.latlng); if(d < minD) { minD = d; snapped = p; } });
-        addPoint(snapped[0], snapped[1], null, true);
+        addPoint(snapped[0], snapped[1]);
     });
 </script>
 </body>
