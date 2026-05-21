@@ -113,8 +113,10 @@
                     const ts = data.properties.timeseries.find(t => new Date(t.time) > target);
                     if (ts) {
                         const d = ts.data.instant.details;
+                        const pData = ts.data.next_1_hours?.details || ts.data.next_6_hours?.details || {};
+                        const rain = pData.precipitation_amount !== undefined ? ` | 💧 ${pData.precipitation_amount}mm` : "";
                         const gust = d.wind_speed_of_gust ? `(${d.wind_speed_of_gust} m/s)` : "";
-                        document.getElementById(`w-${p.id}`).innerHTML = `🌡️ ${d.air_temperature}°C | 💨 ${d.wind_speed} m/s ${gust} <span class="wind-indicator" style="transform:rotate(${d.wind_from_direction}deg)">➤</span>`;
+                        document.getElementById(`w-${p.id}`).innerHTML = `🌡️ ${d.air_temperature}°C | 💨 ${d.wind_speed} m/s ${gust}${rain} <span class="wind-indicator" style="transform:rotate(${d.wind_from_direction}deg)">➤</span>`;
                     }
                 });
         }
