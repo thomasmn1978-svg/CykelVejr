@@ -16,7 +16,7 @@
         input { padding: 8px; border-radius: 5px; border: 1px solid var(--border); background: var(--card); color: white; width: 100%; box-sizing: border-box; }
         .del-btn { float: right; cursor: pointer; color: var(--danger); font-weight: bold; }
         .wind-indicator { display: inline-block; font-size: 1.2em; font-weight: bold; color: #fbbf24; margin-left: 8px; transition: transform 0.3s; }
-        #welcome-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); padding: 25px; border-radius: 15px; z-index: 2000; border: 2px solid var(--accent); text-align: center; width: 85%; max-width: 400px; }
+        #welcome-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); padding: 25px; border-radius: 15px; z-index: 2000; border: 2px solid var(--accent); text-align: left; width: 85%; max-width: 400px; }
         
         @media (max-width: 600px) { 
             #panel { width: 90% !important; right: 5% !important; left: auto !important; max-height: 40vh; box-sizing: border-box; } 
@@ -26,8 +26,8 @@
 <body>
 
 <div id="welcome-popup">
-    <h3>Velkommen til Rute Vejr</h3>
-    <p>1. Upload GPX-fil.<br>2. Indtast startdato, tid og fart.<br>3. Klik på kortet for at tilføje punkter.</p>
+    <h3>Sådan bruger du siden 🚴‍♂️🌦️</h3>
+    <p>1. Upload din GPX-rute.<br>2. Tidsplan: Vælg dato, starttid og forventet gns.fart.<br>3. Interaktio : Start og mål tilføjes automatisk, klik på kortet hvor du ønsker at få vejrudsigten:<br>4. Vejr: Systemet tilføjer automatisk vejrudsigten (YR.no) for alle punkter på det tidpunkt, du forventes at passere punktet.</p>
     <button class="btn-upload" style="margin: 0 auto; width: 100px;" onclick="document.getElementById('welcome-popup').style.display='none'">Forstået</button>
 </div>
 
