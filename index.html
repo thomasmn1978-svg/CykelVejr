@@ -75,7 +75,6 @@
         document.getElementById('startTime').value = `${hh}:${mm}`;
     };
 
-    // Ændret: Slettede "if(pointCollection.some(...)) return;" for at sikre at Mål altid tilføjes
     async function addPoint(lat, lon, name = null, isUser = false) {
         const displayName = name || await getLocName(lat, lon);
         const marker = L.marker([lat, lon]).addTo(routeLayer);
@@ -88,6 +87,10 @@
             for(let i=0; i<idx; i++) dist += L.latLng(polylineCoords[i]).distanceTo(polylineCoords[i+1]);
         }
         pointCollection.push({ id: Date.now()+Math.random(), lat, lon, name: displayName, isUser, dist: dist/1000, marker });
+        
+        // Sortering af listen med det samme
+        pointCollection.sort((a, b) => a.dist - b.dist);
+        
         calcEndFromSpeed();
         setTimeout(() => { document.getElementById('panel').scrollTop = document.getElementById('panel').scrollHeight; }, 300);
     }
@@ -97,7 +100,6 @@
         const speed = parseFloat(document.getElementById('speedInput').value);
         const start = parseDatoTid(document.getElementById('startDate').value, document.getElementById('startTime').value);
         
-        pointCollection.sort((a, b) => a.dist - b.dist);
         for(let p of pointCollection) {
             const target = new Date(start.getTime() + (p.dist / speed * 3600000));
             const card = document.createElement('div'); card.className = 'poi-card';
