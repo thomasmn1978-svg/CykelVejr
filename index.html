@@ -105,7 +105,7 @@
             const d = String(target.getDate()).padStart(2, '0'), m = String(target.getMonth() + 1).padStart(2, '0');
             const hh = String(target.getHours()).padStart(2, '0'), mm = String(target.getMinutes()).padStart(2, '0');
             
-            card.innerHTML = `${p.isUser ? '<span class="del-btn" onclick="removePoint('+p.id+')">×</span>' : ''}<strong>${p.name}</strong><br><small>${p.dist.toFixed(1)} km</small><br><small>${d}/${m} ${hh}:${mm}</small><div id="w-${p.id}">Henter...</div>`;
+            card.innerHTML = `${p.isUser ? '<span class="del-btn" onclick="removePoint('+p.id+')">×</span>' : ''}<strong>${p.name} (${p.dist.toFixed(1)} km)</strong><br><small>${d}/${m} ${hh}:${mm}</small><div id="w-${p.id}">Henter...</div>`;
             list.appendChild(card);
             
             fetch(`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${p.lat}&lon=${p.lon}`, { headers: { 'User-Agent': 'GPXWeatherApp' } })
