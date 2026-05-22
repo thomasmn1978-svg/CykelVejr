@@ -107,6 +107,7 @@
         pointCollection.push({ id: Date.now()+Math.random(), lat, lon, name: displayName, isUser, dist, marker });
         pointCollection.sort((a, b) => a.dist - b.dist);
         calcEndFromSpeed();
+        document.getElementById('panel').scrollTop = document.getElementById('panel').scrollHeight;
     }
 
     async function renderList() {
