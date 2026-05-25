@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GPX Vejr-Dashboard</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         :root { --bg: #0f172a; --panel: rgba(30, 41, 59, 0.98); --text: #f1f5f9; --card: #1e293b; --accent: #818cf8; --border: #334155; --danger: #ef4444; }
         body, html { margin: 0; height: 100%; font-family: sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
@@ -12,14 +13,20 @@
         #panel { position: absolute; top: 10px; right: 10px; width: 350px; max-height: 85vh; background: var(--panel); backdrop-filter: blur(20px); border-radius: 20px; z-index: 1000; padding: 15px; overflow-y: auto; border: 1px solid var(--border); box-shadow: -5px 0 15px rgba(0,0,0,0.3); }
         .poi-card { background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--accent); font-size: 0.85em; }
         .btn-upload { background: var(--accent); color: white; padding: 10px; border-radius: 8px; cursor: pointer; text-align: center; display: block; font-weight: bold; margin: 15px 0; }
-        .input-group { margin-bottom: 10px; font-size: 0.9em; display: grid; grid-template-columns: 80px 1fr; align-items: center; }
+        .input-group { margin-bottom: 10px; font-size: 0.9em; display: grid; grid-template-columns: 80px 1fr; align-items: center; gap: 8px; }
         input { padding: 8px; border-radius: 5px; border: 1px solid var(--border); background: var(--card); color: white; width: 100%; box-sizing: border-box; }
-        .date-time-wrapper { position: relative; }
-        .date-time-wrapper input { color: transparent; cursor: pointer; }
-        .date-time-wrapper input:focus { color: white; }
-        .date-time-wrapper::after { content: attr(data-display); position: absolute; left: 8px; top: 8px; pointer-events: none; color: white; }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
-        input[type="time"]::-webkit-calendar-picker-indicator { display: none; }
+        input::placeholder { color: #94a3b8; }
+
+        /* Flatpickr mørkt tema, så dato/tid passer til resten af siden */
+        .flatpickr-calendar { background: var(--card); border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        .flatpickr-calendar, .flatpickr-months .flatpickr-month, .flatpickr-current-month .flatpickr-monthDropdown-months, .flatpickr-weekdays, span.flatpickr-weekday { color: var(--text); }
+        .flatpickr-day { color: var(--text); }
+        .flatpickr-day:hover, .flatpickr-day:focus { background: #334155; border-color: #334155; }
+        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange { background: var(--accent); border-color: var(--accent); color: white; }
+        .flatpickr-day.today { border-color: var(--accent); }
+        .flatpickr-time input, .flatpickr-time .flatpickr-am-pm { color: var(--text); background: var(--card); }
+        .flatpickr-time input:hover, .flatpickr-time .flatpickr-am-pm:hover { background: #334155; }
+
         .del-btn { float: right; cursor: pointer; color: var(--danger); font-weight: bold; }
         .wind-indicator { display: inline-block; font-size: 1.2em; font-weight: bold; color: #fbbf24; margin-left: 8px; transition: transform 0.3s; }
         #welcome-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); padding: 25px; border-radius: 15px; z-index: 2000; border: 2px solid var(--accent); text-align: left; width: 85%; max-width: 400px; }
@@ -41,46 +48,70 @@
 <div id="panel">
     <h3 style="margin-top:0">Rute Vejr</h3>
     <div id="route-info" style="font-size: 0.9em; margin-bottom: 10px; color: var(--accent);"></div>
-    <div class="input-group"><label>Start dato</label><div class="date-time-wrapper" id="dateWrapper"><input type="date" id="startDate" onchange="updateDisplay(this); calcEndFromSpeed()"></div></div>
-    <div class="input-group"><label>Start tid</label><div class="date-time-wrapper" id="timeWrapper"><input type="time" id="startTime" onchange="updateDisplay(this); calcEndFromSpeed()"></div></div>
-    <div class="input-group"><label>Fart km/t</label><input type="number" id="speedInput" value="30" onchange="calcEndFromSpeed()"></div>
-    <div class="input-group"><label>Slut dato</label><input type="text" id="endDate" readonly></div>
-    <div class="input-group"><label>Slut tid</label><input type="text" id="endTime" readonly></div>
+    
+    <div class="input-group">
+        <label for="startDate">Start dato</label>
+        <input type="text" id="startDate" inputmode="numeric" placeholder="dd-mm-åååå" autocomplete="off">
+    </div>
+    <div class="input-group">
+        <label for="startTime">Start tid</label>
+        <input type="text" id="startTime" inputmode="numeric" placeholder="tt:mm" autocomplete="off">
+    </div>
+    <div class="input-group"><label for="speedInput">Fart km/t</label><input type="number" id="speedInput" value="30" min="1" step="0.1" onchange="calcEndFromSpeed()"></div>
+    <div class="input-group"><label for="endDate">Slut dato</label><input type="text" id="endDate" readonly></div>
+    <div class="input-group"><label for="endTime">Slut tid</label><input type="text" id="endTime" readonly></div>
     
     <label class="btn-upload">Upload GPX fil<input type="file" id="gpx" hidden accept=".gpx"></label>
     <div id="list"></div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/da.js"></script>
 <script>
     const map = L.map('map').setView([56.0, 11.0], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    function updateDisplay(el) {
-        const wrapper = el.parentElement;
-        if(el.type === 'date') {
-            const [y, m, d] = el.value.split('-');
-            wrapper.setAttribute('data-display', `${d}-${m}-${y}`);
-        } else {
-            wrapper.setAttribute('data-display', el.value);
-        }
+    function formatDateDK(date) {
+        return `${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}-${date.getFullYear()}`;
+    }
+
+    function formatTime24(date) {
+        return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
     }
 
     function parseDatoTid(dVal, tVal) {
-        const [y, m, d] = dVal.split('-').map(Number);
+        if (!dVal || !tVal) return new Date();
+        const [d, m, y] = dVal.split('-').map(Number);
         const [hh, mm] = tVal.split(':').map(Number);
         return new Date(y, m - 1, d, hh, mm);
     }
 
     window.onload = () => {
         const now = new Date();
-        const today = now.toISOString().split('T')[0];
-        const dIn = document.getElementById('startDate');
-        const tIn = document.getElementById('startTime');
-        dIn.setAttribute('min', today);
-        dIn.value = today;
-        tIn.value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-        updateDisplay(dIn); updateDisplay(tIn);
+
+        flatpickr("#startDate", {
+            locale: "da",
+            dateFormat: "d-m-Y",
+            allowInput: true,
+            defaultDate: now,
+            minDate: "today",
+            onChange: calcEndFromSpeed,
+            onClose: calcEndFromSpeed
+        });
+
+        flatpickr("#startTime", {
+            locale: "da",
+            enableTime: true,
+            noCalendar: true,
+            time_24hr: true,
+            dateFormat: "H:i",
+            allowInput: true,
+            defaultDate: now,
+            minuteIncrement: 5,
+            onChange: calcEndFromSpeed,
+            onClose: calcEndFromSpeed
+        });
     };
 
     let routeLayer = L.layerGroup().addTo(map);
@@ -107,20 +138,19 @@
         pointCollection.push({ id: Date.now()+Math.random(), lat, lon, name: displayName, isUser, dist, marker });
         pointCollection.sort((a, b) => a.dist - b.dist);
         calcEndFromSpeed();
-        document.getElementById('panel').scrollTop = document.getElementById('panel').scrollHeight;
     }
 
     async function renderList() {
         const list = document.getElementById('list'); list.innerHTML = '';
         const speed = parseFloat(document.getElementById('speedInput').value);
+        if (!speed || speed <= 0) return;
+
         const start = parseDatoTid(document.getElementById('startDate').value, document.getElementById('startTime').value);
         
         for(let p of pointCollection) {
             const target = new Date(start.getTime() + (p.dist / speed * 3600000));
             const card = document.createElement('div'); card.className = 'poi-card';
-            const d = String(target.getDate()).padStart(2, '0'), m = String(target.getMonth() + 1).padStart(2, '0'), y = target.getFullYear();
-            const hh = String(target.getHours()).padStart(2, '0'), mm = String(target.getMinutes()).padStart(2, '0');
-            card.innerHTML = `${p.isUser ? '<span class="del-btn" onclick="removePoint('+p.id+')">×</span>' : ''}<strong>${p.name} (${p.dist.toFixed(1)} km, ${d}-${m}-${y} ${hh}:${mm})</strong><div id="w-${p.id}">Henter...</div>`;
+            card.innerHTML = `${p.isUser ? '<span class="del-btn" onclick="removePoint('+p.id+')">×</span>' : ''}<strong>${p.name} (${p.dist.toFixed(1)} km, ${formatDateDK(target)} ${formatTime24(target)})</strong><div id="w-${p.id}">Henter...</div>`;
             list.appendChild(card);
             fetch(`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${p.lat}&lon=${p.lon}`, { headers: { 'User-Agent': 'GPXWeatherApp' } })
                 .then(r => r.json()).then(data => {
@@ -130,19 +160,28 @@
                         const pData = ts.data.next_1_hours?.details || ts.data.next_6_hours?.details || {};
                         const rain = pData.precipitation_amount !== undefined ? ` | 💧 ${pData.precipitation_amount}mm` : "";
                         const wind = `${d.wind_speed} m/s ${d.wind_speed_of_gust ? `(${d.wind_speed_of_gust} m/s)` : ""}`;
-                        document.getElementById(`w-${p.id}`).innerHTML = `🌡️ ${d.air_temperature}°C | 💨 ${wind} <span class="wind-indicator" style="transform:rotate(${d.wind_from_direction}deg)">➤</span>${rain}`;
-                    } else { document.getElementById(`w-${p.id}`).innerHTML = "⚠️ Ikke tilgængelig"; }
-                }).catch(() => { document.getElementById(`w-${p.id}`).innerHTML = "⚠️ Fejl"; });
+                        const weatherEl = document.getElementById(`w-${p.id}`);
+                        if (weatherEl) weatherEl.innerHTML = `🌡️ ${d.air_temperature}°C | 💨 ${wind} <span class="wind-indicator" style="transform:rotate(${d.wind_from_direction}deg)">➤</span>${rain}`;
+                    } else { 
+                        const weatherEl = document.getElementById(`w-${p.id}`);
+                        if (weatherEl) weatherEl.innerHTML = "⚠️ Ikke tilgængelig"; 
+                    }
+                }).catch(() => { 
+                    const weatherEl = document.getElementById(`w-${p.id}`);
+                    if (weatherEl) weatherEl.innerHTML = "⚠️ Fejl"; 
+                });
         }
     }
 
     function calcEndFromSpeed() {
         if(totalDist === 0) return;
         const speed = parseFloat(document.getElementById('speedInput').value);
+        if (!speed || speed <= 0) return;
+
         const start = parseDatoTid(document.getElementById('startDate').value, document.getElementById('startTime').value);
         const end = new Date(start.getTime() + (totalDist / speed * 3600000));
-        document.getElementById('endDate').value = `${String(end.getDate()).padStart(2,'0')}-${String(end.getMonth()+1).padStart(2,'0')}-${end.getFullYear()}`;
-        document.getElementById('endTime').value = `${String(end.getHours()).padStart(2,'0')}:${String(end.getMinutes()).padStart(2,'0')}`;
+        document.getElementById('endDate').value = formatDateDK(end);
+        document.getElementById('endTime').value = formatTime24(end);
         renderList();
     }
 
@@ -152,6 +191,7 @@
     }
 
     document.getElementById('gpx').addEventListener('change', async function(e) {
+        if (!e.target.files[0]) return;
         routeLayer.clearLayers(); pointCollection = [];
         const xml = new DOMParser().parseFromString(await e.target.files[0].text(), "text/xml");
         polylineCoords = Array.from(xml.getElementsByTagName("trkpt")).map(p => [parseFloat(p.getAttribute("lat")), parseFloat(p.getAttribute("lon"))]);
