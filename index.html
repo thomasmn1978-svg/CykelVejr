@@ -1,39 +1,909 @@
 <!DOCTYPE html>
-<html lang="da" class="dark-mode">
+<html lang="da">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPX Vejr-Dashboard</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Rutevejr for cykelryttere</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
     <style>
-        :root { --bg: #0f172a; --panel: rgba(30, 41, 59, 0.98); --text: #f1f5f9; --card: #1e293b; --accent: #818cf8; --border: #334155; --danger: #ef4444; }
-        body, html { margin: 0; height: 100%; font-family: sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
-        #map { height: 100%; width: 100%; }
-        #panel { position: absolute; top: 10px; right: 10px; width: 350px; max-height: 85vh; background: var(--panel); backdrop-filter: blur(20px); border-radius: 20px; z-index: 1000; padding: 15px; overflow-y: auto; border: 1px solid var(--border); box-shadow: -5px 0 15px rgba(0,0,0,0.3); }
-        .poi-card { background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--accent); font-size: 0.85em; }
-        .btn-upload { background: var(--accent); color: white; padding: 10px; border-radius: 8px; cursor: pointer; text-align: center; display: block; font-weight: bold; margin: 15px 0; }
-        .input-group { margin-bottom: 10px; font-size: 0.9em; display: grid; grid-template-columns: 80px 1fr; align-items: center; gap: 8px; }
-        input { padding: 8px; border-radius: 5px; border: 1px solid var(--border); background: var(--card); color: white; width: 100%; box-sizing: border-box; }
-        input::placeholder { color: #94a3b8; }
-
-        /* Flatpickr mørkt tema, så dato/tid passer til resten af siden */
-        .flatpickr-calendar { background: var(--card); border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
-        .flatpickr-calendar, .flatpickr-months .flatpickr-month, .flatpickr-current-month .flatpickr-monthDropdown-months, .flatpickr-weekdays, span.flatpickr-weekday { color: var(--text); }
-        .flatpickr-day { color: var(--text); }
-        .flatpickr-day:hover, .flatpickr-day:focus { background: #334155; border-color: #334155; }
-        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange { background: var(--accent); border-color: var(--accent); color: white; }
-        .flatpickr-day.today { border-color: var(--accent); }
-        .flatpickr-time input, .flatpickr-time .flatpickr-am-pm { color: var(--text); background: var(--card); }
-        .flatpickr-time input:hover, .flatpickr-time .flatpickr-am-pm:hover { background: #334155; }
-
-        .del-btn { float: right; cursor: pointer; color: var(--danger); font-weight: bold; }
-        .wind-indicator { display: inline-block; font-size: 1.2em; font-weight: bold; color: #fbbf24; margin-left: 8px; transition: transform 0.3s; }
-        #welcome-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); padding: 25px; border-radius: 15px; z-index: 2000; border: 2px solid var(--accent); text-align: left; width: 85%; max-width: 400px; }
-        
-        @media (max-width: 600px) { 
-            #panel { width: 90% !important; right: 5% !important; left: auto !important; max-height: 40vh; box-sizing: border-box; } 
+        :root {
+            --bg: #07111f;
+            --panel: rgba(15, 23, 42, 0.94);
+            --panel-strong: rgba(15, 23, 42, 0.98);
+            --card: #111827;
+            --card-soft: #1f2937;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-2: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: rgba(148, 163, 184, 0.28);
+            --shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
         }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+            background: #0f172a;
+        }
+
+        #panel {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            z-index: 1000;
+            width: min(410px, calc(100vw - 28px));
+            max-height: calc(100vh - 28px);
+            overflow-y: auto;
+            padding: 16px;
+            background: var(--panel);
+            backdrop-filter: blur(18px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .app-title {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.15rem;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 0.82rem;
+        }
+
+        .badge {
+            flex: 0 0 auto;
+            padding: 6px 9px;
+            border-radius: 999px;
+            background: rgba(56, 189, 248, 0.12);
+            color: #bae6fd;
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .section {
+            background: rgba(17, 24, 39, 0.72);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: 800;
+            font-size: 0.9rem;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .input-group.full { grid-column: 1 / -1; }
+
+        label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #cbd5e1;
+        }
+
+        input {
+            width: 100%;
+            min-height: 42px;
+            padding: 10px 11px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #0f172a;
+            color: var(--text);
+            font: inherit;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.14);
+        }
+
+        input[readonly] {
+            color: #e0f2fe;
+            background: rgba(14, 165, 233, 0.08);
+        }
+
+        .btn {
+            width: 100%;
+            border: 0;
+            border-radius: 14px;
+            padding: 12px 14px;
+            min-height: 44px;
+            cursor: pointer;
+            font-weight: 850;
+            color: white;
+            background: linear-gradient(135deg, #0284c7, #22c55e);
+            box-shadow: 0 14px 30px rgba(2, 132, 199, 0.22);
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn.secondary {
+            background: rgba(148, 163, 184, 0.14);
+            box-shadow: none;
+            border: 1px solid var(--border);
+            color: #e2e8f0;
+        }
+
+        .btn-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        #route-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .stat {
+            padding: 9px;
+            background: rgba(15, 23, 42, 0.7);
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+        }
+
+        .stat small {
+            display: block;
+            color: var(--muted);
+            font-size: 0.68rem;
+            margin-bottom: 3px;
+        }
+
+        .stat strong {
+            font-size: 0.9rem;
+        }
+
+        #hint {
+            color: var(--muted);
+            font-size: 0.8rem;
+            line-height: 1.35;
+            margin-top: 8px;
+        }
+
+        #status {
+            color: #bae6fd;
+            font-size: 0.78rem;
+            line-height: 1.35;
+            margin-top: 8px;
+        }
+
+        .poi-card {
+            position: relative;
+            margin-top: 10px;
+            padding: 12px;
+            background: rgba(15, 23, 42, 0.88);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-left: 5px solid var(--accent);
+            border-radius: 16px;
+        }
+
+        .poi-card.start { border-left-color: var(--accent-2); }
+        .poi-card.finish { border-left-color: var(--warning); }
+
+        .poi-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .poi-name {
+            font-weight: 900;
+            letter-spacing: -0.01em;
+        }
+
+        .poi-meta {
+            color: var(--muted);
+            font-size: 0.76rem;
+            margin-top: 3px;
+        }
+
+        .weather {
+            margin-top: 9px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 7px;
+            font-size: 0.8rem;
+        }
+
+        .weather-line {
+            padding: 8px;
+            border-radius: 12px;
+            background: rgba(31, 41, 55, 0.72);
+        }
+
+        .weather-line.full { grid-column: 1 / -1; }
+
+        .delete-btn {
+            background: rgba(239, 68, 68, 0.12);
+            color: #fecaca;
+            border: 1px solid rgba(239, 68, 68, 0.28);
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 900;
+            padding: 4px 8px;
+            line-height: 1;
+        }
+
+        .wind-arrow {
+            display: inline-block;
+            color: #fde68a;
+            font-size: 1.1em;
+            font-weight: 900;
+            margin-left: 4px;
+            transform-origin: center;
+        }
+
+        #welcome-popup {
+            position: fixed;
+            inset: 0;
+            z-index: 2500;
+            display: grid;
+            place-items: center;
+            padding: 20px;
+            background: rgba(2, 6, 23, 0.68);
+            backdrop-filter: blur(8px);
+        }
+
+        .welcome-card {
+            width: min(450px, 100%);
+            padding: 22px;
+            border-radius: 24px;
+            background: var(--panel-strong);
+            border: 1px solid rgba(56, 189, 248, 0.38);
+            box-shadow: var(--shadow);
+        }
+
+        .welcome-card h2 { margin: 0 0 10px; }
+        .welcome-card p { color: #cbd5e1; line-height: 1.45; }
+
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background: #0f172a;
+            color: var(--text);
+        }
+
+        .flatpickr-calendar {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            color: var(--text);
+        }
+
+        .flatpickr-day, .flatpickr-weekday, .flatpickr-current-month, .flatpickr-time input, .flatpickr-monthDropdown-months {
+            color: var(--text) !important;
+        }
+
+        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
+            background: #0284c7 !important;
+            border-color: #0284c7 !important;
+        }
+
+        .flatpickr-time, .flatpickr-months .flatpickr-month {
+            background: #0f172a;
+            color: var(--text);
+        }
+
+        @media (max-width: 720px) {
+            #panel {
+                top: auto;
+                right: 8px;
+                left: 8px;
+                bottom: 8px;
+                width: auto;
+                max-height: 55vh;
+                border-radius: 22px;
+            }
+
+            .input-grid, .btn-row, #route-info {
+                grid-template-columns: 1fr;
+            }
+
+            .weather { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div id="welcome-popup">
+        <div class="welcome-card">
+            <h2>Rutevejr til din cykeltur 🚴‍♂️🌦️</h2>
+            <p>Upload en GPX-fil, vælg startdato, starttid og forventet gennemsnitsfart. Appen beregner hvornår du passerer start, mål og dine egne punkter på ruten — og henter vejrudsigten for netop de tidspunkter.</p>
+            <button class="btn" onclick="document.getElementById('welcome-popup').style.display='none'">Forstået</button>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <aside id="panel" aria-label="Rutevejr panel">
+        <div class="app-title">
+            <div>
+                <h1>Rutevejr</h1>
+                <p class="subtitle">Vejr langs GPX-ruten på dine passagetider</p>
+            </div>
+            <span class="badge">Cykel</span>
+        </div>
+
+        <section class="section">
+            <div class="section-title">Turdata</div>
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="startDate">Startdato</label>
+                    <input type="text" id="startDate" inputmode="numeric" placeholder="dd-mm-åååå" />
+                </div>
+                <div class="input-group">
+                    <label for="startTime">Starttid</label>
+                    <input type="text" id="startTime" inputmode="numeric" placeholder="tt:mm" />
+                </div>
+                <div class="input-group full">
+                    <label for="speedInput">Forventet gennemsnitsfart, km/t</label>
+                    <input type="number" id="speedInput" value="30" min="5" max="80" step="0.1" />
+                </div>
+                <div class="input-group">
+                    <label for="endDate">Forventet slutdato</label>
+                    <input type="text" id="endDate" readonly />
+                </div>
+                <div class="input-group">
+                    <label for="endTime">Forventet sluttid</label>
+                    <input type="text" id="endTime" readonly />
+                </div>
+            </div>
+            <div class="btn-row">
+                <label class="btn" for="gpx">📁 Upload GPX<input type="file" id="gpx" hidden accept=".gpx,application/gpx+xml,text/xml" /></label>
+                <button class="btn secondary" id="refreshBtn" type="button">🔄 Opdater vejr</button>
+            </div>
+            <div id="status">Upload en GPX-rute for at starte.</div>
+        </section>
+
+        <section class="section" id="statsSection" style="display:none;">
+            <div class="section-title">Rute</div>
+            <div id="route-info"></div>
+            <div id="hint">Klik på ruten/kortet for at tilføje egne vejrpunkter. Punktet snappes automatisk til nærmeste sted på ruten.</div>
+        </section>
+
+        <section class="section">
+            <div class="section-title">
+                <span>Vejrpunkter</span>
+                <span id="pointCount" style="color: var(--muted); font-size: .75rem;">0 punkter</span>
+            </div>
+            <div id="list"></div>
+        </section>
+    </aside>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/da.js"></script>
+    <script>
+        const MET_USER_AGENT = "GPXRouteWeather/1.0 thomasmn1978";
+        const map = L.map("map", { zoomControl: true }).setView([56.2, 10.7], 7);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap"
+        }).addTo(map);
+
+        const routeLayer = L.layerGroup().addTo(map);
+        const pointLayer = L.layerGroup().addTo(map);
+
+        let routeLine = null;
+        let pointCollection = [];
+        let polylineCoords = [];
+        let cumulativeKm = [];
+        let totalDist = 0;
+        let weatherCache = new Map();
+        let weatherRunId = 0;
+
+        const els = {
+            startDate: document.getElementById("startDate"),
+            startTime: document.getElementById("startTime"),
+            speed: document.getElementById("speedInput"),
+            endDate: document.getElementById("endDate"),
+            endTime: document.getElementById("endTime"),
+            gpx: document.getElementById("gpx"),
+            list: document.getElementById("list"),
+            status: document.getElementById("status"),
+            routeInfo: document.getElementById("route-info"),
+            statsSection: document.getElementById("statsSection"),
+            pointCount: document.getElementById("pointCount"),
+            refreshBtn: document.getElementById("refreshBtn")
+        };
+
+        function pad(n) { return String(n).padStart(2, "0"); }
+
+        function formatDateDA(date) {
+            return `${pad(date.getDate())}-${pad(date.getMonth() + 1)}-${date.getFullYear()}`;
+        }
+
+        function formatTime24(date) {
+            return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        }
+
+        function formatDateTimeDA(date) {
+            return `${formatDateDA(date)} kl. ${formatTime24(date)}`;
+        }
+
+        function parseDatoTid(dVal, tVal) {
+            if (!dVal || !tVal) return null;
+            const [d, m, y] = dVal.split("-").map(Number);
+            const [hh, mm] = tVal.split(":").map(Number);
+            if (![d, m, y, hh, mm].every(Number.isFinite)) return null;
+            const parsed = new Date(y, m - 1, d, hh, mm);
+            return Number.isNaN(parsed.getTime()) ? null : parsed;
+        }
+
+        function getSpeed() {
+            const speed = parseFloat(String(els.speed.value).replace(",", "."));
+            return Number.isFinite(speed) && speed > 0 ? speed : null;
+        }
+
+        function durationLabel(hours) {
+            if (!Number.isFinite(hours)) return "–";
+            const mins = Math.round(hours * 60);
+            const h = Math.floor(mins / 60);
+            const m = mins % 60;
+            return h > 0 ? `${h} t ${pad(m)} min` : `${m} min`;
+        }
+
+        function setStatus(text) {
+            els.status.textContent = text;
+        }
+
+        function initPickers() {
+            const now = new Date();
+            flatpickr(els.startDate, {
+                locale: "da",
+                dateFormat: "d-m-Y",
+                defaultDate: now,
+                minDate: "today",
+                disableMobile: true,
+                onChange: updateAll
+            });
+
+            flatpickr(els.startTime, {
+                locale: "da",
+                enableTime: true,
+                noCalendar: true,
+                time_24hr: true,
+                dateFormat: "H:i",
+                defaultDate: now,
+                minuteIncrement: 5,
+                disableMobile: true,
+                onChange: updateAll
+            });
+        }
+
+        function buildCumulativeDistances(coords) {
+            cumulativeKm = [0];
+            let sum = 0;
+            for (let i = 0; i < coords.length - 1; i++) {
+                sum += L.latLng(coords[i]).distanceTo(L.latLng(coords[i + 1])) / 1000;
+                cumulativeKm.push(sum);
+            }
+            totalDist = sum;
+        }
+
+        function nearestRoutePoint(latlng) {
+            let minD = Infinity;
+            let bestIndex = 0;
+            for (let i = 0; i < polylineCoords.length; i++) {
+                const d = L.latLng(polylineCoords[i]).distanceTo(latlng);
+                if (d < minD) {
+                    minD = d;
+                    bestIndex = i;
+                }
+            }
+            return {
+                lat: polylineCoords[bestIndex][0],
+                lon: polylineCoords[bestIndex][1],
+                dist: cumulativeKm[bestIndex] || 0,
+                distanceFromClick: minD
+            };
+        }
+
+        function firstUsefulName(address = {}) {
+            // Vigtigt for cykelryttere: Brug vejnavn først. Hvis der ikke findes et vejnavn,
+            // bruges det nærmeste stednavn i en fornuftig prioriteret rækkefølge.
+            return address.road
+                || address.pedestrian
+                || address.cycleway
+                || address.path
+                || address.footway
+                || address.track
+                || address.bridleway
+                || address.neighbourhood
+                || address.suburb
+                || address.hamlet
+                || address.village
+                || address.town
+                || address.city
+                || address.municipality
+                || address.county
+                || address.state
+                || null;
+        }
+
+        async function getLocName(lat, lon) {
+            try {
+                const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=da`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error("Nominatim fejl");
+                const data = await res.json();
+                const name = firstUsefulName(data.address);
+                if (name) return name;
+
+                // Sidste fallback: brug første meningsfulde del af display_name.
+                if (data.display_name) {
+                    return data.display_name.split(",").map(x => x.trim()).find(Boolean) || "Vejrpunkt";
+                }
+                return "Vejrpunkt";
+            } catch (e) {
+                return "Vejrpunkt";
+            }
+        }
+
+        function markerIcon(type) {
+            const color = type === "start" ? "#22c55e" : type === "finish" ? "#f59e0b" : "#38bdf8";
+            const label = type === "start" ? "S" : type === "finish" ? "M" : "•";
+            return L.divIcon({
+                className: "custom-marker",
+                html: `<div style="display:grid;place-items:center;width:28px;height:28px;border-radius:999px;background:${color};color:#06101f;font-weight:900;border:3px solid white;box-shadow:0 8px 20px rgba(0,0,0,.35);">${label}</div>`,
+                iconSize: [28, 28],
+                iconAnchor: [14, 14]
+            });
+        }
+
+        async function addPoint(lat, lon, name = null, type = "user", forceDist = null) {
+            const id = `p-${Date.now()}-${Math.round(Math.random() * 100000)}`;
+            const displayName = name || await getLocName(lat, lon);
+            const dist = forceDist !== null ? forceDist : nearestRoutePoint(L.latLng(lat, lon)).dist;
+            const marker = L.marker([lat, lon], { icon: markerIcon(type) }).addTo(pointLayer);
+            marker.bindPopup(`<strong>${displayName}</strong><br>${dist.toFixed(1).replace(".", ",")} km fra start`);
+            pointCollection.push({ id, lat, lon, name: displayName, type, dist, marker });
+            pointCollection.sort((a, b) => a.dist - b.dist);
+            updateAll();
+        }
+
+        function removePoint(id) {
+            const p = pointCollection.find(x => x.id === id);
+            if (!p || p.type !== "user") return;
+            pointLayer.removeLayer(p.marker);
+            pointCollection = pointCollection.filter(x => x.id !== id);
+            updateAll();
+        }
+
+        window.removePoint = removePoint;
+
+        window.addEventListener("resize", () => {
+            clearTimeout(window.__routeFitTimer);
+            window.__routeFitTimer = setTimeout(fitRouteInVisibleArea, 150);
+        });
+
+        function formatWindValue(value) {
+            const num = Number(value);
+            if (!Number.isFinite(num)) return "–";
+            return Number.isInteger(num) ? String(num) : num.toFixed(1).replace(".", ",");
+        }
+
+        function forecastSymbol(ts) {
+            const symbol = ts?.data?.next_1_hours?.summary?.symbol_code || ts?.data?.next_6_hours?.summary?.symbol_code || "";
+            if (symbol.includes("rain")) return "🌧️";
+            if (symbol.includes("cloud")) return "☁️";
+            if (symbol.includes("clear")) return "☀️";
+            if (symbol.includes("sleet")) return "🌨️";
+            if (symbol.includes("snow")) return "❄️";
+            if (symbol.includes("fog")) return "🌫️";
+            return "🌦️";
+        }
+
+        function chooseForecast(timeseries, target) {
+            if (!timeseries?.length) return null;
+            let best = timeseries[0];
+            let bestDelta = Math.abs(new Date(best.time) - target);
+            for (const item of timeseries) {
+                const delta = Math.abs(new Date(item.time) - target);
+                if (delta < bestDelta) {
+                    best = item;
+                    bestDelta = delta;
+                }
+            }
+            return best;
+        }
+
+        async function fetchWeather(p, target) {
+            const key = `${p.lat.toFixed(4)},${p.lon.toFixed(4)}`;
+            let data = weatherCache.get(key);
+            if (!data) {
+                const res = await fetch(`https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${p.lat}&lon=${p.lon}`, {
+                    headers: { "User-Agent": MET_USER_AGENT }
+                });
+                if (!res.ok) throw new Error("Vejrdata kunne ikke hentes");
+                data = await res.json();
+                weatherCache.set(key, data);
+            }
+            const timeseries = data.properties?.timeseries || [];
+            return { ts: chooseForecast(timeseries, target), timeseries };
+        }
+
+        function getNumberOrNull(value) {
+            const num = Number(value);
+            return Number.isFinite(num) ? num : null;
+        }
+
+        function findNearestGust(timeseries, target, indexHint = -1) {
+            if (!Array.isArray(timeseries)) return null;
+
+            // Først tjekkes den valgte vejrtime, derefter nærmeste timer omkring passagetidspunktet.
+            const candidates = [];
+            if (indexHint >= 0) candidates.push(timeseries[indexHint]);
+            for (const item of timeseries) candidates.push(item);
+
+            let best = null;
+            let bestDelta = Infinity;
+            for (const item of candidates) {
+                const gust = getNumberOrNull(item?.data?.instant?.details?.wind_speed_of_gust);
+                if (gust === null) continue;
+                const delta = Math.abs(new Date(item.time) - target);
+                if (delta < bestDelta) {
+                    best = gust;
+                    bestDelta = delta;
+                }
+            }
+            return best;
+        }
+
+        function weatherHtml(ts, target, timeseries = []) {
+            if (!ts) return `<div class="weather-line full">⚠️ Ingen vejrudsigt for dette tidspunkt.</div>`;
+            const instant = ts.data.instant.details;
+            const next = ts.data.next_1_hours?.details || ts.data.next_6_hours?.details || {};
+            const forecastTime = new Date(ts.time);
+            const rain = next.precipitation_amount ?? 0;
+            const windSpeedNumber = getNumberOrNull(instant.wind_speed);
+            const directGustNumber = getNumberOrNull(instant.wind_speed_of_gust);
+            const indexHint = Array.isArray(timeseries) ? timeseries.findIndex(item => item.time === ts.time) : -1;
+            const gustNumber = directGustNumber ?? findNearestGust(timeseries, target, indexHint);
+            const windText = `${formatWindValue(windSpeedNumber)} m/s (${gustNumber === null ? "–" : formatWindValue(gustNumber)} m/s)`;
+            const arrowDeg = getNumberOrNull(instant.wind_from_direction) ?? 0;
+            const tempNumber = getNumberOrNull(instant.air_temperature);
+            const tempText = tempNumber === null ? "–" : tempNumber.toFixed(1).replace(".", ",");
+            const deltaMin = Math.round(Math.abs(forecastTime - target) / 60000);
+            const timeNote = deltaMin > 45 ? `Nærmeste vejrtime: ${formatTime24(forecastTime)}` : `Vejrtime: ${formatTime24(forecastTime)}`;
+
+            return `
+                <div class="weather-line">${forecastSymbol(ts)} ${tempText} °C</div>
+                <div class="weather-line">💧 ${String(rain).replace(".", ",")} mm</div>
+                <div class="weather-line full">💨 ${windText} <span class="wind-arrow" style="transform: rotate(${arrowDeg}deg);">➤</span></div>
+                <div class="weather-line full">${timeNote}</div>
+            `;
+        }
+
+        function pointPassageTime(p) {
+            const start = parseDatoTid(els.startDate.value, els.startTime.value);
+            const speed = getSpeed();
+            if (!start || !speed) return null;
+            return new Date(start.getTime() + (p.dist / speed * 3600000));
+        }
+
+        function fitRouteInVisibleArea() {
+            if (!routeLine) return;
+            map.invalidateSize();
+            const panel = document.getElementById("panel");
+            const panelRect = panel.getBoundingClientRect();
+            const isMobileLayout = window.matchMedia("(max-width: 720px)").matches;
+
+            if (isMobileLayout) {
+                // På mobil ligger menuen nederst, så der reserveres plads i bunden.
+                map.fitBounds(routeLine.getBounds(), {
+                    paddingTopLeft: [24, 24],
+                    paddingBottomRight: [24, Math.ceil(panelRect.height) + 32]
+                });
+            } else {
+                // På desktop ligger menuen til højre, så der reserveres plads i højre side.
+                map.fitBounds(routeLine.getBounds(), {
+                    paddingTopLeft: [28, 28],
+                    paddingBottomRight: [Math.ceil(panelRect.width) + 48, 28]
+                });
+            }
+        }
+
+        function updateStats() {
+            const speed = getSpeed();
+            const start = parseDatoTid(els.startDate.value, els.startTime.value);
+            if (!totalDist || !speed || !start) {
+                els.endDate.value = "";
+                els.endTime.value = "";
+                return;
+            }
+            const durationHours = totalDist / speed;
+            const end = new Date(start.getTime() + durationHours * 3600000);
+            els.endDate.value = formatDateDA(end);
+            els.endTime.value = formatTime24(end);
+            els.routeInfo.innerHTML = `
+                <div class="stat"><small>Distance</small><strong>${totalDist.toFixed(1).replace(".", ",")} km</strong></div>
+                <div class="stat"><small>Køretid</small><strong>${durationLabel(durationHours)}</strong></div>
+                <div class="stat"><small>Slut</small><strong>${formatTime24(end)}</strong></div>
+            `;
+            els.statsSection.style.display = "block";
+        }
+
+        function renderListSkeleton() {
+            els.list.innerHTML = "";
+            els.pointCount.textContent = `${pointCollection.length} punkt${pointCollection.length === 1 ? "" : "er"}`;
+            if (!pointCollection.length) {
+                els.list.innerHTML = `<div id="hint">Ingen punkter endnu. Upload en GPX-rute først.</div>`;
+                return;
+            }
+
+            for (const p of pointCollection) {
+                const target = pointPassageTime(p);
+                const card = document.createElement("div");
+                card.className = `poi-card ${p.type === "start" ? "start" : p.type === "finish" ? "finish" : ""}`;
+                card.id = `card-${p.id}`;
+                card.innerHTML = `
+                    <div class="poi-top">
+                        <div>
+                            <div class="poi-name">${p.type === "start" ? "Start" : p.type === "finish" ? "Mål" : p.name}</div>
+                            <div class="poi-meta">${p.dist.toFixed(1).replace(".", ",")} km · passerer ${target ? formatDateTimeDA(target) : "–"}</div>
+                        </div>
+                        ${p.type === "user" ? `<button class="delete-btn" title="Fjern punkt" onclick="removePoint('${p.id}')">×</button>` : ""}
+                    </div>
+                    <div class="weather" id="weather-${p.id}"><div class="weather-line full">Henter vejr...</div></div>
+                `;
+                els.list.appendChild(card);
+            }
+        }
+
+        async function updateWeather() {
+            const start = parseDatoTid(els.startDate.value, els.startTime.value);
+            const speed = getSpeed();
+            if (!pointCollection.length || !start || !speed) return;
+
+            const runId = ++weatherRunId;
+            setStatus("Henter vejr for ruten...");
+
+            for (const p of pointCollection) {
+                if (runId !== weatherRunId) return;
+                const target = pointPassageTime(p);
+                const box = document.getElementById(`weather-${p.id}`);
+                if (!box || !target) continue;
+                try {
+                    const { ts, timeseries } = await fetchWeather(p, target);
+                    box.innerHTML = weatherHtml(ts, target, timeseries);
+                } catch (e) {
+                    box.innerHTML = `<div class="weather-line full">⚠️ Kunne ikke hente vejrdata.</div>`;
+                }
+            }
+            setStatus("Vejret er opdateret for start, mål og dine punkter.");
+        }
+
+        let updateTimer = null;
+        function updateAll() {
+            updateStats();
+            renderListSkeleton();
+            clearTimeout(updateTimer);
+            updateTimer = setTimeout(updateWeather, 250);
+        }
+
+        async function handleGpxUpload(file) {
+            setStatus("Indlæser GPX-rute...");
+            routeLayer.clearLayers();
+            pointLayer.clearLayers();
+            pointCollection = [];
+            polylineCoords = [];
+            cumulativeKm = [];
+            totalDist = 0;
+            weatherCache.clear();
+            weatherRunId++;
+
+            const text = await file.text();
+            const xml = new DOMParser().parseFromString(text, "text/xml");
+            const parserError = xml.querySelector("parsererror");
+            if (parserError) {
+                setStatus("GPX-filen kunne ikke læses. Prøv en anden fil.");
+                return;
+            }
+
+            const trkpts = Array.from(xml.getElementsByTagName("trkpt"));
+            polylineCoords = trkpts
+                .map(p => [parseFloat(p.getAttribute("lat")), parseFloat(p.getAttribute("lon"))])
+                .filter(([lat, lon]) => Number.isFinite(lat) && Number.isFinite(lon));
+
+            if (polylineCoords.length < 2) {
+                setStatus("GPX-filen mangler rutedata/trkpt-punkter.");
+                return;
+            }
+
+            buildCumulativeDistances(polylineCoords);
+            routeLine = L.polyline(polylineCoords, { color: "#38bdf8", weight: 5, opacity: 0.9 }).addTo(routeLayer);
+            fitRouteInVisibleArea();
+
+            await addPoint(polylineCoords[0][0], polylineCoords[0][1], "Start", "start", 0);
+            await addPoint(polylineCoords[polylineCoords.length - 1][0], polylineCoords[polylineCoords.length - 1][1], "Mål", "finish", totalDist);
+            setStatus("Ruten er indlæst. Klik på ruten for at tilføje flere vejrpunkter.");
+        }
+
+        els.gpx.addEventListener("change", async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            try {
+                await handleGpxUpload(file);
+            } catch (err) {
+                setStatus("Der skete en fejl under indlæsning af GPX-filen.");
+            }
+        });
+
+        els.speed.addEventListener("input", updateAll);
+        els.refreshBtn.addEventListener("click", () => {
+            weatherCache.clear();
+            updateAll();
+        });
+
+        map.on("click", async (e) => {
+            if (polylineCoords.length < 2) {
+                setStatus("Upload en GPX-rute før du tilføjer vejrpunkter.");
+                return;
+            }
+            const snap = nearestRoutePoint(e.latlng);
+            if (snap.distanceFromClick > 1000) {
+                setStatus("Klik tættere på ruten for at tilføje et punkt.");
+                return;
+            }
+            await addPoint(snap.lat, snap.lon, null, "user", snap.dist);
+            setStatus("Vejrpunkt tilføjet.");
+        });
+
+        initPickers();
+        updateAll();
+    </script>
+</body>
+</html>
     </style>
 </head>
 <body>
