@@ -196,6 +196,11 @@
             margin-top: 10px;
         }
 
+        .top-actions {
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+
         #route-info {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -358,8 +363,40 @@
             color: var(--text);
         }
 
-        .flatpickr-day, .flatpickr-weekday, .flatpickr-current-month, .flatpickr-time input, .flatpickr-monthDropdown-months {
+        .flatpickr-day,
+        .flatpickr-weekday,
+        .flatpickr-current-month,
+        .flatpickr-current-month input.cur-year,
+        .flatpickr-time input,
+        .flatpickr-time .flatpickr-time-separator,
+        .flatpickr-time .flatpickr-am-pm,
+        .flatpickr-monthDropdown-months,
+        .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month {
             color: var(--text) !important;
+        }
+
+        .flatpickr-monthDropdown-months,
+        .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month,
+        .flatpickr-current-month input.cur-year,
+        .flatpickr-time input {
+            background: #0f172a !important;
+        }
+
+        .flatpickr-day:hover,
+        .flatpickr-day:focus {
+            background: rgba(14, 165, 233, 0.28) !important;
+            border-color: rgba(14, 165, 233, 0.60) !important;
+            color: var(--text) !important;
+        }
+
+        .flatpickr-day.today {
+            border-color: var(--accent) !important;
+        }
+
+        .flatpickr-day.prevMonthDay,
+        .flatpickr-day.nextMonthDay,
+        .flatpickr-day.flatpickr-disabled {
+            color: #64748b !important;
         }
 
         .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
@@ -440,11 +477,15 @@
             }
 
             #panel.collapsed .app-title { margin-bottom: 0; }
-            #panel.collapsed h1::after {
-                content: " · tryk for at åbne";
+            #panel h1::after {
+                content: " · tryk øverst for at minimere";
                 color: var(--muted);
                 font-size: .78rem;
                 font-weight: 600;
+            }
+
+            #panel.collapsed h1::after {
+                content: " · tryk for at åbne";
             }
 
             .input-grid, .btn-row, #route-info {
@@ -483,6 +524,10 @@
 
         <section class="section">
             <div class="section-title">Turdata</div>
+            <div class="btn-row top-actions">
+                <label class="btn" for="gpx">📁 Upload GPX<input type="file" id="gpx" hidden accept=".gpx,application/gpx+xml,text/xml" /></label>
+                <button class="btn secondary" id="refreshBtn" type="button">🔄 Opdater vejr</button>
+            </div>
             <div class="input-grid">
                 <div class="input-group">
                     <label for="startDate">Startdato</label>
@@ -504,10 +549,6 @@
                     <label for="endTime">Forventet sluttid</label>
                     <input type="text" id="endTime" readonly />
                 </div>
-            </div>
-            <div class="btn-row">
-                <label class="btn" for="gpx">📁 Upload GPX<input type="file" id="gpx" hidden accept=".gpx,application/gpx+xml,text/xml" /></label>
-                <button class="btn secondary" id="refreshBtn" type="button">🔄 Opdater vejr</button>
             </div>
             <div id="status">Upload en GPX-rute for at starte.</div>
         </section>
@@ -577,13 +618,13 @@
             els.welcome.classList.add("hidden");
             els.welcome.setAttribute("aria-hidden", "true");
             els.welcome.style.display = "none";
-            try { localStorage.setItem("routeWeatherWelcomeClosed", "1"); } catch (e) {}
         }
 
         function showWelcomeIfNeeded() {
-            let wasClosed = false;
-            try { wasClosed = localStorage.getItem("routeWeatherWelcomeClosed") === "1"; } catch (e) {}
-            if (wasClosed) closeWelcome();
+            if (!els.welcome) return;
+            els.welcome.classList.remove("hidden");
+            els.welcome.removeAttribute("aria-hidden");
+            els.welcome.style.display = "grid";
         }
 
         // Sørger for, at der aldrig vises mere end én intro-popup, selv hvis siden hostes
@@ -1093,11 +1134,11 @@
             const isCollapsed = els.panel.classList.contains("collapsed");
             setMobilePanel(isCollapsed);
         });
-        els.panel.addEventListener("click", (event) => {
-            if (els.panel.classList.contains("collapsed")) {
-                event.preventDefault();
-                setMobilePanel(true);
-            }
+        document.querySelector(".app-title")?.addEventListener("click", (event) => {
+            if (!window.matchMedia("(max-width: 720px)").matches) return;
+            const isCollapsed = els.panel.classList.contains("collapsed");
+            if (isCollapsed) event.preventDefault();
+            setMobilePanel(isCollapsed);
         });
 
         initPickers();
