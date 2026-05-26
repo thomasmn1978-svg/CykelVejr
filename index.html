@@ -571,6 +571,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/da.js"></script>
+    <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.min.js"></script>
     <script>
         const MET_USER_AGENT = "GPXRouteWeather/1.0 thomasmn1978";
         const map = L.map("map", { zoomControl: true }).setView([56.2, 10.7], 7);
@@ -1001,7 +1002,11 @@
                 card.innerHTML = `
                     <div class="poi-top">
                         <div>
-                            <div class="poi-name">${p.type === "start" ? "Start" : p.type === "finish" ? "Mål" : p.name}</div>
+                            <div class="poi-name">${p.type === "start"
+                                ? "Start"
+                                : p.type === "finish"
+                                ? "Mål"
+                                : `${pointCollection.filter(x => x.type === "user").findIndex(x => x.id === p.id) + 1}. ${p.name}`}</div>
                             <div class="poi-meta">${p.dist.toFixed(1).replace(".", ",")} km · passerer ${target ? formatDateTimeDA(target) : "–"}</div>
                         </div>
                         ${p.type === "user" ? `<button class="delete-btn" title="Fjern punkt" onclick="removePoint('${p.id}')">×</button>` : ""}
@@ -1078,6 +1083,26 @@
 
             buildCumulativeDistances(polylineCoords);
             routeLine = L.polyline(polylineCoords, { color: "#00e5ff", weight: 5, opacity: 0.95 }).addTo(routeLayer);
+
+            // Retningspile langs ruten
+            const arrowDecorator = L.polylineDecorator(routeLine, {
+                patterns: [
+                    {
+                        offset: 25,
+                        repeat: 120,
+                        symbol: L.Symbol.arrowHead({
+                            pixelSize: 10,
+                            polygon: false,
+                            pathOptions: {
+                                stroke: true,
+                                color: "#ffffff",
+                                weight: 3
+                            }
+                        })
+                    }
+                ]
+            });
+            routeLayer.addLayer(arrowDecorator);
             fitRouteInVisibleArea();
 
             await addPoint(polylineCoords[0][0], polylineCoords[0][1], "Start", "start", 0);
