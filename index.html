@@ -317,6 +317,674 @@
             backdrop-filter: blur(8px);
         }
 
+        #welcome-popup.hidden,
+        #welcome-popup[hidden] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        .welcome-card {
+            position: relative;
+            width: min(450px, 100%);
+            padding: 22px;
+            border-radius: 24px;
+            background: var(--panel-strong);
+            border: 1px solid rgba(56, 189, 248, 0.38);
+            box-shadow: var(--shadow);
+        }
+
+        .welcome-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 40px;
+            height: 40px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.30);
+            background: rgba(15, 23, 42, 0.88);
+            color: var(--text);
+            font-size: 1.35rem;
+            font-weight: 900;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .welcome-card h2 { margin: 0 0 10px; }
+        .welcome-card p { color: #cbd5e1; line-height: 1.45; }
+
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background: #0f172a;
+            color: var(--text);
+        }
+
+        .flatpickr-calendar {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            color: var(--text);
+        }
+
+        .flatpickr-day,
+        .flatpickr-weekday,
+        .flatpickr-current-month,
+        .flatpickr-current-month input.cur-year,
+        .flatpickr-time input,
+        .flatpickr-time .flatpickr-time-separator,
+        .flatpickr-time .flatpickr-am-pm,
+        .flatpickr-monthDropdown-months,
+        .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month {
+            color: var(--text) !important;
+        }
+
+        .flatpickr-monthDropdown-months,
+        .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month,
+        .flatpickr-current-month input.cur-year,
+        .flatpickr-time input {
+            background: #0f172a !important;
+        }
+
+        .flatpickr-day:hover,
+        .flatpickr-day:focus {
+            background: rgba(14, 165, 233, 0.28) !important;
+            border-color: rgba(14, 165, 233, 0.60) !important;
+            color: var(--text) !important;
+        }
+
+        .flatpickr-day.today {
+            border-color: var(--accent) !important;
+        }
+
+        .flatpickr-day.prevMonthDay,
+        .flatpickr-day.nextMonthDay,
+        .flatpickr-day.flatpickr-disabled {
+            color: #64748b !important;
+        }
+
+        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
+            background: #0284c7 !important;
+            border-color: #0284c7 !important;
+        }
+
+        .flatpickr-time, .flatpickr-months .flatpickr-month {
+            background: #0f172a;
+            color: var(--text);
+        }
+
+
+        .coverage-warning {
+            grid-column: 1 / -1;
+            padding: 10px;
+            border-radius: 12px;
+            background: rgba(250, 204, 21, 0.12);
+            border: 1px solid rgba(250, 204, 21, 0.35);
+            color: #fde68a;
+            font-weight: 700;
+        }
+
+        .data-time {
+            color: var(--muted);
+            font-size: 0.78rem;
+        }
+
+        .poi-card {
+            background: linear-gradient(180deg, rgba(15, 23, 42, .98), rgba(3, 7, 18, .96));
+            border: 1px solid rgba(148, 163, 184, .22);
+            border-left: 4px solid var(--accent);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 12px 32px rgba(0,0,0,.28);
+        }
+
+        .poi-card.start { border-left-color: var(--accent-2); }
+        .poi-card.finish { border-left-color: var(--warning); }
+
+        .btn {
+            background: linear-gradient(135deg, #00bcd4, #0ea5e9);
+            color: #001018;
+            font-weight: 900;
+            letter-spacing: .01em;
+        }
+
+        .btn.secondary {
+            background: rgba(15, 23, 42, .92);
+            color: var(--text);
+            border: 1px solid rgba(0, 229, 255, .32);
+        }
+
+        .custom-marker.user-point-marker > div {
+            background: #38bdf8;
+            color: #06101f;
+        }
+
+        /* Mere kompakte vejrpunkter i menuen */
+        .poi-card {
+            margin-top: 7px;
+            padding: 8px 9px;
+            border-radius: 13px;
+        }
+
+        .poi-top {
+            gap: 7px;
+        }
+
+        .poi-name {
+            font-size: 0.88rem;
+            line-height: 1.15;
+        }
+
+        .poi-meta {
+            font-size: 0.70rem;
+            margin-top: 1px;
+        }
+
+        .weather {
+            margin-top: 6px;
+            gap: 5px;
+            font-size: 0.74rem;
+        }
+
+        .weather-line {
+            padding: 6px 7px;
+            border-radius: 10px;
+        }
+
+        .delete-btn {
+            padding: 3px 7px;
+        }
+
+        @media (max-width: 720px) {
+            body { touch-action: manipulation; }
+
+            #panel {
+                top: auto;
+                right: 8px;
+                left: 8px;
+                bottom: 8px;
+                width: auto;
+                max-height: 58vh;
+                border-radius: 24px 24px 20px 20px;
+                padding: 12px;
+                transition: max-height .22s ease, transform .22s ease;
+            }
+
+            #panelHandle { display: block; }
+
+            #panel.collapsed {
+                max-height: 116px;
+                overflow: hidden;
+            }
+
+            #panel.collapsed .section,
+            #panel.collapsed .subtitle,
+            #panel.collapsed .badge {
+                display: none;
+            }
+
+            #panel.collapsed .app-title { margin-bottom: 0; }
+            #panel h1::after {
+                content: " · tryk øverst for at minimere";
+                color: var(--muted);
+                font-size: .78rem;
+                font-weight: 600;
+            }
+
+            #panel.collapsed h1::after {
+                content: " · tryk for at åbne";
+            }
+
+            .input-grid, .btn-row, #route-info {
+                grid-template-columns: 1fr;
+            }
+
+            .weather { grid-template-columns: 1fr; }
+            .poi-card { padding: 9px; }
+            .weather-line { min-height: 34px; font-size: .82rem; }
+            input, .btn { min-height: 48px; font-size: 16px; }
+            .welcome-card { padding: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="welcome-popup" onclick="if(event.target===this) forceCloseWelcome(event)">
+        <div class="welcome-card" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+            <button class="welcome-close" id="closeWelcomeX" type="button" aria-label="Luk vejledning" onclick="forceCloseWelcome(event)">×</button>
+            <h2 id="welcomeTitle">Rutevejr</h2>
+            <p>Upload en GPX-rute, vælg starttid og fart. Så viser siden vejret ved start, mål og dine egne punkter.</p>
+            <button class="btn" id="closeWelcome" type="button" onclick="forceCloseWelcome(event)">Luk</button>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <aside id="panel" aria-label="Rutevejr panel">
+        <button id="panelHandle" type="button" aria-label="Fold panel sammen eller ud"></button>
+        <div class="app-title">
+            <div>
+                <h1>Rutevejr</h1>
+                <p class="subtitle">Vejr langs GPX-ruten på dine passagetider</p>
+            </div>
+            <span class="badge">Cykel</span>
+        </div>
+
+        <section class="section">
+            <div class="section-title">Turdata</div>
+            <div class="btn-row top-actions">
+                <label class="btn" for="gpx">📁 Upload GPX<input type="file" id="gpx" hidden accept=".gpx,application/gpx+xml,text/xml" /></label>
+                <button class="btn secondary" id="refreshBtn" type="button">🔄 Opdater vejr</button>
+            </div>
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="startDate">Startdato</label>
+                    <input type="text" id="startDate" inputmode="numeric" placeholder="dd-mm-åååå" />
+                </div>
+                <div class="input-group">
+                    <label for="startTime">Starttid</label>
+                    <input type="text" id="startTime" inputmode="numeric" placeholder="tt:mm" />
+                </div>
+                <div class="input-group full">
+                    <label for="speedInput">Forventet gennemsnitsfart, km/t</label>
+                    <input type="number" id="speedInput" value="30" min="5" max="80" step="0.1" />
+                </div>
+                <div class="input-group">
+                    <label for="endDate">Forventet slutdato</label>
+                    <input type="text" id="endDate" readonly />
+                </div>
+                <div class="input-group">
+                    <label for="endTime">Forventet sluttid</label>
+                    <input type="text" id="endTime" readonly />
+                </div>
+            </div>
+            <div id="status">Upload en GPX-rute for at starte.</div>
+        </section>
+
+        <section class="section" id="statsSection" style="display:none;">
+            <div class="section-title">Rute</div>
+            <div id="route-info"></div>
+            <div id="hint">Klik på ruten/kortet for at tilføje egne vejrpunkter. Punktet snappes automatisk til nærmeste sted på ruten.</div>
+        </section>
+
+        <section class="section">
+            <div class="section-title">
+                <span>Vejrpunkter</span>
+                <span id="pointCount" style="color: var(--muted); font-size: .75rem;">0 punkter</span>
+            </div>
+            <div id="list"></div>
+        </section>
+    </aside>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/da.js"></script>
+    <script>
+        const MET_USER_AGENT = "GPXRouteWeather/1.0 thomasmn1978";
+        const map = L.map("map", { zoomControl: true }).setView([56.2, 10.7], 7);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap"
+        }).addTo(map);
+
+        const routeLayer = L.layerGroup().addTo(map);
+        const pointLayer = L.layerGroup().addTo(map);
+
+        let routeLine = null;
+        let pointCollection = [];
+        let polylineCoords = [];
+        let cumulativeKm = [];
+        let totalDist = 0;
+        let weatherCache = new Map();
+        let weatherRunId = 0;
+
+        const els = {
+            startDate: document.getElementById("startDate"),
+            startTime: document.getElementById("startTime"),
+            speed: document.getElementById("speedInput"),
+            endDate: document.getElementById("endDate"),
+            endTime: document.getElementById("endTime"),
+            gpx: document.getElementById("gpx"),
+            list: document.getElementById("list"),
+            status: document.getElementById("status"),
+            routeInfo: document.getElementById("route-info"),
+            statsSection: document.getElementById("statsSection"),
+            pointCount: document.getElementById("pointCount"),
+            refreshBtn: document.getElementById("refreshBtn"),
+            panel: document.getElementById("panel"),
+            panelHandle: document.getElementById("panelHandle"),
+            welcome: document.getElementById("welcome-popup"),
+            closeWelcome: document.getElementById("closeWelcome"),
+            closeWelcomeX: document.getElementById("closeWelcomeX")
+        };
+
+
+
+        function closeWelcome(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const popup = document.getElementById("welcome-popup");
+            if (!popup) return false;
+            popup.classList.add("hidden");
+            popup.setAttribute("aria-hidden", "true");
+            popup.style.setProperty("display", "none", "important");
+            popup.style.setProperty("pointer-events", "none", "important");
+            return false;
+        }
+
+        window.closeWelcome = closeWelcome;
+
+        function bindWelcomeClose() {
+            const popup = document.getElementById("welcome-popup");
+            const closeBtn = document.getElementById("closeWelcome");
+            const closeX = document.getElementById("closeWelcomeX");
+            if (!popup) return;
+
+            [closeBtn, closeX].forEach(btn => {
+                if (!btn) return;
+                btn.onclick = closeWelcome;
+                btn.addEventListener("pointerup", closeWelcome, { capture: true });
+                btn.addEventListener("touchend", closeWelcome, { passive: false, capture: true });
+            });
+
+            popup.onclick = function(event) {
+                if (event.target === popup) closeWelcome(event);
+            };
+            popup.addEventListener("pointerup", function(event) {
+                if (event.target === popup) closeWelcome(event);
+            }, { capture: true });
+        }
+
+        ensureSingleWelcomePopup();
+        showWelcomeIfNeeded();
+        bindWelcomeClose();
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") closeWelcome(event);
+        });
+
+            color: var(--text);
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+            background: #050816;
+            filter: saturate(1.06) contrast(1.05);
+        }
+
+        #panel {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            z-index: 1000;
+            width: min(410px, calc(100vw - 28px));
+            max-height: calc(100vh - 28px);
+            overflow-y: auto;
+            padding: 16px;
+            background: var(--panel);
+            backdrop-filter: blur(18px);
+            border: 1px solid var(--border);
+            border-top: 1px solid rgba(0, 229, 255, 0.38);
+            border-radius: 24px;
+            box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.04);
+            overscroll-behavior: contain;
+        }
+
+        #panelHandle {
+            display: none;
+            width: 52px;
+            height: 5px;
+            border: 0;
+            border-radius: 999px;
+            background: rgba(203, 213, 225, 0.65);
+            margin: 0 auto 12px;
+            padding: 0;
+        }
+
+        .app-title {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.15rem;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 0.82rem;
+        }
+
+        .badge {
+            flex: 0 0 auto;
+            padding: 6px 9px;
+            border-radius: 999px;
+            background: rgba(56, 189, 248, 0.12);
+            color: #bae6fd;
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        .section {
+            background: rgba(17, 24, 39, 0.72);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: 800;
+            font-size: 0.9rem;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .input-group.full { grid-column: 1 / -1; }
+
+        label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #cbd5e1;
+        }
+
+        input {
+            width: 100%;
+            min-height: 42px;
+            padding: 10px 11px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #0f172a;
+            color: var(--text);
+            font: inherit;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.14);
+        }
+
+        input[readonly] {
+            color: #e0f2fe;
+            background: rgba(14, 165, 233, 0.08);
+        }
+
+        .btn {
+            width: 100%;
+            border: 0;
+            border-radius: 14px;
+            padding: 12px 14px;
+            min-height: 44px;
+            cursor: pointer;
+            font-weight: 850;
+            color: white;
+            background: linear-gradient(135deg, #0284c7, #22c55e);
+            box-shadow: 0 14px 30px rgba(2, 132, 199, 0.22);
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn.secondary {
+            background: rgba(148, 163, 184, 0.14);
+            box-shadow: none;
+            border: 1px solid var(--border);
+            color: #e2e8f0;
+        }
+
+        .btn-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .top-actions {
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+
+        #route-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .stat {
+            padding: 9px;
+            background: rgba(15, 23, 42, 0.7);
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+        }
+
+        .stat small {
+            display: block;
+            color: var(--muted);
+            font-size: 0.68rem;
+            margin-bottom: 3px;
+        }
+
+        .stat strong {
+            font-size: 0.9rem;
+        }
+
+        #hint {
+            color: var(--muted);
+            font-size: 0.8rem;
+            line-height: 1.35;
+            margin-top: 8px;
+        }
+
+        #status {
+            color: #bae6fd;
+            font-size: 0.78rem;
+            line-height: 1.35;
+            margin-top: 8px;
+        }
+
+        .poi-card {
+            position: relative;
+            margin-top: 10px;
+            padding: 12px;
+            background: rgba(15, 23, 42, 0.88);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-left: 5px solid var(--accent);
+            border-radius: 16px;
+        }
+
+        .poi-card.start { border-left-color: var(--accent-2); }
+        .poi-card.finish { border-left-color: var(--warning); }
+
+        .poi-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .poi-name {
+            font-weight: 900;
+            letter-spacing: -0.01em;
+        }
+
+        .poi-meta {
+            color: var(--muted);
+            font-size: 0.76rem;
+            margin-top: 3px;
+        }
+
+        .weather {
+            margin-top: 9px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 7px;
+            font-size: 0.8rem;
+        }
+
+        .weather-line {
+            padding: 8px;
+            border-radius: 12px;
+            background: rgba(31, 41, 55, 0.72);
+        }
+
+        .weather-line.full { grid-column: 1 / -1; }
+
+        .delete-btn {
+            background: rgba(239, 68, 68, 0.12);
+            color: #fecaca;
+            border: 1px solid rgba(239, 68, 68, 0.28);
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 900;
+            padding: 4px 8px;
+            line-height: 1;
+        }
+
+        .wind-arrow {
+            display: inline-block;
+            color: #fde68a;
+            font-size: 1.1em;
+            font-weight: 900;
+            margin-left: 4px;
+            transform-origin: center;
+        }
+
+        #welcome-popup {
+            position: fixed;
+            inset: 0;
+            z-index: 2500;
+            display: grid;
+            place-items: center;
+            padding: 20px;
+            background: rgba(2, 6, 23, 0.68);
+            backdrop-filter: blur(8px);
+        }
+
         #welcome-popup.hidden {
             display: none !important;
             pointer-events: none !important;
