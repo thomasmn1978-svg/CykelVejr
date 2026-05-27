@@ -196,6 +196,11 @@
             margin-top: 10px;
         }
 
+        .top-actions {
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+
         #route-info {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -358,8 +363,40 @@
             color: var(--text);
         }
 
-        .flatpickr-day, .flatpickr-weekday, .flatpickr-current-month, .flatpickr-time input, .flatpickr-monthDropdown-months {
+        .flatpickr-day,
+        .flatpickr-weekday,
+        .flatpickr-current-month,
+        .flatpickr-current-month input.cur-year,
+        .flatpickr-time input,
+        .flatpickr-time .flatpickr-time-separator,
+        .flatpickr-time .flatpickr-am-pm,
+        .flatpickr-monthDropdown-months,
+        .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month {
             color: var(--text) !important;
+        }
+
+        .flatpickr-monthDropdown-months,
+        .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month,
+        .flatpickr-current-month input.cur-year,
+        .flatpickr-time input {
+            background: #0f172a !important;
+        }
+
+        .flatpickr-day:hover,
+        .flatpickr-day:focus {
+            background: rgba(14, 165, 233, 0.28) !important;
+            border-color: rgba(14, 165, 233, 0.60) !important;
+            color: var(--text) !important;
+        }
+
+        .flatpickr-day.today {
+            border-color: var(--accent) !important;
+        }
+
+        .flatpickr-day.prevMonthDay,
+        .flatpickr-day.nextMonthDay,
+        .flatpickr-day.flatpickr-disabled {
+            color: #64748b !important;
         }
 
         .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
@@ -411,6 +448,47 @@
             border: 1px solid rgba(0, 229, 255, .32);
         }
 
+        .custom-marker.user-point-marker > div {
+            background: #38bdf8;
+            color: #06101f;
+        }
+
+        /* Mere kompakte vejrpunkter i menuen */
+        .poi-card {
+            margin-top: 7px;
+            padding: 8px 9px;
+            border-radius: 13px;
+        }
+
+        .poi-top {
+            gap: 7px;
+        }
+
+        .poi-name {
+            font-size: 0.88rem;
+            line-height: 1.15;
+        }
+
+        .poi-meta {
+            font-size: 0.70rem;
+            margin-top: 1px;
+        }
+
+        .weather {
+            margin-top: 6px;
+            gap: 5px;
+            font-size: 0.74rem;
+        }
+
+        .weather-line {
+            padding: 6px 7px;
+            border-radius: 10px;
+        }
+
+        .delete-btn {
+            padding: 3px 7px;
+        }
+
         @media (max-width: 720px) {
             body { touch-action: manipulation; }
 
@@ -440,11 +518,15 @@
             }
 
             #panel.collapsed .app-title { margin-bottom: 0; }
-            #panel.collapsed h1::after {
-                content: " · tryk for at åbne";
+            #panel h1::after {
+                content: " · tryk øverst for at minimere";
                 color: var(--muted);
                 font-size: .78rem;
                 font-weight: 600;
+            }
+
+            #panel.collapsed h1::after {
+                content: " · tryk for at åbne";
             }
 
             .input-grid, .btn-row, #route-info {
@@ -452,8 +534,8 @@
             }
 
             .weather { grid-template-columns: 1fr; }
-            .poi-card { padding: 14px; }
-            .weather-line { min-height: 42px; font-size: .9rem; }
+            .poi-card { padding: 9px; }
+            .weather-line { min-height: 34px; font-size: .82rem; }
             input, .btn { min-height: 48px; font-size: 16px; }
             .welcome-card { padding: 18px; }
         }
@@ -483,6 +565,10 @@
 
         <section class="section">
             <div class="section-title">Turdata</div>
+            <div class="btn-row top-actions">
+                <label class="btn" for="gpx">📁 Upload GPX<input type="file" id="gpx" hidden accept=".gpx,application/gpx+xml,text/xml" /></label>
+                <button class="btn secondary" id="refreshBtn" type="button">🔄 Opdater vejr</button>
+            </div>
             <div class="input-grid">
                 <div class="input-group">
                     <label for="startDate">Startdato</label>
@@ -504,10 +590,6 @@
                     <label for="endTime">Forventet sluttid</label>
                     <input type="text" id="endTime" readonly />
                 </div>
-            </div>
-            <div class="btn-row">
-                <label class="btn" for="gpx">📁 Upload GPX<input type="file" id="gpx" hidden accept=".gpx,application/gpx+xml,text/xml" /></label>
-                <button class="btn secondary" id="refreshBtn" type="button">🔄 Opdater vejr</button>
             </div>
             <div id="status">Upload en GPX-rute for at starte.</div>
         </section>
@@ -572,18 +654,24 @@
 
 
 
-        function closeWelcome() {
+        function closeWelcome(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
             if (!els.welcome) return;
             els.welcome.classList.add("hidden");
             els.welcome.setAttribute("aria-hidden", "true");
             els.welcome.style.display = "none";
-            try { localStorage.setItem("routeWeatherWelcomeClosed", "1"); } catch (e) {}
         }
 
+        window.closeWelcome = closeWelcome;
+
         function showWelcomeIfNeeded() {
-            let wasClosed = false;
-            try { wasClosed = localStorage.getItem("routeWeatherWelcomeClosed") === "1"; } catch (e) {}
-            if (wasClosed) closeWelcome();
+            if (!els.welcome) return;
+            els.welcome.classList.remove("hidden");
+            els.welcome.removeAttribute("aria-hidden");
+            els.welcome.style.display = "grid";
         }
 
         // Sørger for, at der aldrig vises mere end én intro-popup, selv hvis siden hostes
@@ -732,15 +820,72 @@
             }
         }
 
-        function markerIcon(type) {
+        function markerIcon(type, number = null) {
             const color = type === "start" ? "#22c55e" : type === "finish" ? "#f59e0b" : "#38bdf8";
-            const label = type === "start" ? "S" : type === "finish" ? "M" : "•";
+            const label = type === "start" ? "S" : type === "finish" ? "M" : String(number || "•");
+            const extraClass = type === "user" ? " user-point-marker" : "";
             return L.divIcon({
-                className: "custom-marker",
+                className: `custom-marker${extraClass}`,
                 html: `<div style="display:grid;place-items:center;width:28px;height:28px;border-radius:999px;background:${color};color:#06101f;font-weight:900;border:3px solid white;box-shadow:0 8px 20px rgba(0,0,0,.35);">${label}</div>`,
                 iconSize: [28, 28],
                 iconAnchor: [14, 14]
             });
+        }
+
+        function routeOrderedPoints() {
+            const start = pointCollection.filter(p => p.type === "start").sort((a, b) => a.dist - b.dist);
+            const users = pointCollection.filter(p => p.type === "user").sort((a, b) => a.dist - b.dist);
+            const finish = pointCollection.filter(p => p.type === "finish").sort((a, b) => a.dist - b.dist);
+            return [...start, ...users, ...finish];
+        }
+
+        function userPointNumber(point) {
+            return pointCollection
+                .filter(p => p.type === "user")
+                .sort((a, b) => a.dist - b.dist)
+                .findIndex(p => p.id === point.id) + 1;
+        }
+
+        function updatePointMarkers() {
+            pointCollection.forEach(p => {
+                const number = p.type === "user" ? userPointNumber(p) : null;
+                p.marker.setIcon(markerIcon(p.type, number));
+                const label = p.type === "user" ? `${number}. ${p.name}` : p.name;
+                p.marker.bindPopup(`<strong>${label}</strong><br>${p.dist.toFixed(1).replace(".", ",")} km fra start`);
+            });
+        }
+
+        function routeBearing(from, to) {
+            const lat1 = from[0] * Math.PI / 180;
+            const lat2 = to[0] * Math.PI / 180;
+            const dLon = (to[1] - from[1]) * Math.PI / 180;
+            const y = Math.sin(dLon) * Math.cos(lat2);
+            const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+            return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+        }
+
+        function pointAtDistance(km) {
+            if (!polylineCoords.length || !cumulativeKm.length) return null;
+            for (let i = 1; i < cumulativeKm.length; i++) {
+                if (cumulativeKm[i] >= km) {
+                    const prevKm = cumulativeKm[i - 1];
+                    const nextKm = cumulativeKm[i];
+                    const ratio = nextKm === prevKm ? 0 : (km - prevKm) / (nextKm - prevKm);
+                    const from = polylineCoords[i - 1];
+                    const to = polylineCoords[i];
+                    return {
+                        lat: from[0] + (to[0] - from[0]) * ratio,
+                        lon: from[1] + (to[1] - from[1]) * ratio,
+                        bearing: routeBearing(from, to)
+                    };
+                }
+            }
+            const last = polylineCoords.length - 1;
+            return {
+                lat: polylineCoords[last][0],
+                lon: polylineCoords[last][1],
+                bearing: routeBearing(polylineCoords[last - 1], polylineCoords[last])
+            };
         }
 
         async function addPoint(lat, lon, name = null, type = "user", forceDist = null) {
@@ -748,9 +893,9 @@
             const displayName = name || await getLocName(lat, lon);
             const dist = forceDist !== null ? forceDist : nearestRoutePoint(L.latLng(lat, lon)).dist;
             const marker = L.marker([lat, lon], { icon: markerIcon(type) }).addTo(pointLayer);
-            marker.bindPopup(`<strong>${displayName}</strong><br>${dist.toFixed(1).replace(".", ",")} km fra start`);
             pointCollection.push({ id, lat, lon, name: displayName, type, dist, marker });
             pointCollection.sort((a, b) => a.dist - b.dist);
+            updatePointMarkers();
             updateAll();
         }
 
@@ -759,6 +904,7 @@
             if (!p || p.type !== "user") return;
             pointLayer.removeLayer(p.marker);
             pointCollection = pointCollection.filter(x => x.id !== id);
+            updatePointMarkers();
             updateAll();
         }
 
@@ -882,16 +1028,11 @@
             const arrowDeg = getNumberOrNull(instant.wind_from_direction) ?? 0;
             const tempNumber = getNumberOrNull(instant.air_temperature);
             const tempText = tempNumber === null ? "–" : tempNumber.toFixed(1).replace(".", ",");
-            const deltaMin = Math.round(Math.abs(forecastTime - target) / 60000);
-            const timeNote = deltaMin > 45
-                ? `Passage: ${formatDateTimeDA(target)} · nærmeste vejrdata: ${formatDateTimeDA(forecastTime)}`
-                : `Passage: ${formatDateTimeDA(target)} · vejrdata: ${formatDateTimeDA(forecastTime)}`;
 
             return `
                 <div class="weather-line">${forecastSymbol(ts)} ${tempText} °C</div>
                 <div class="weather-line">💧 ${String(rain).replace(".", ",")} mm</div>
                 <div class="weather-line full">💨 ${windText} <span class="wind-arrow" style="transform: rotate(${arrowDeg}deg);">➤</span></div>
-                <div class="weather-line full data-time">${timeNote}</div>
             `;
         }
 
@@ -907,21 +1048,23 @@
             map.invalidateSize();
             const panel = document.getElementById("panel");
             const panelRect = panel.getBoundingClientRect();
+            const mapRect = map.getContainer().getBoundingClientRect();
             const isMobileLayout = window.matchMedia("(max-width: 720px)").matches;
+            const safe = 22;
+            const options = { animate: false, maxZoom: 16 };
 
             if (isMobileLayout) {
-                // På mobil ligger menuen nederst, så der reserveres plads i bunden.
-                map.fitBounds(routeLine.getBounds(), {
-                    paddingTopLeft: [24, 24],
-                    paddingBottomRight: [24, Math.ceil(panelRect.height) + 32]
-                });
+                // Menuen ligger nederst på mobil. Nederste padding svarer til den synlige menu,
+                // så ruten zoomes mest muligt uden at blive dækket.
+                options.paddingTopLeft = [safe, safe];
+                options.paddingBottomRight = [safe, Math.max(safe, Math.ceil(mapRect.bottom - panelRect.top) + safe)];
             } else {
-                // På desktop ligger menuen til højre, så der reserveres plads i højre side.
-                map.fitBounds(routeLine.getBounds(), {
-                    paddingTopLeft: [28, 28],
-                    paddingBottomRight: [Math.ceil(panelRect.width) + 48, 28]
-                });
+                // Menuen ligger til højre på desktop. Højre padding svarer til menuens overlap.
+                options.paddingTopLeft = [safe, safe];
+                options.paddingBottomRight = [Math.max(safe, Math.ceil(mapRect.right - panelRect.left) + safe), safe];
             }
+
+            map.fitBounds(routeLine.getBounds(), options);
         }
 
         function updateStats() {
@@ -952,7 +1095,8 @@
                 return;
             }
 
-            for (const p of pointCollection) {
+            updatePointMarkers();
+            for (const p of routeOrderedPoints()) {
                 const target = pointPassageTime(p);
                 const card = document.createElement("div");
                 card.className = `poi-card ${p.type === "start" ? "start" : p.type === "finish" ? "finish" : ""}`;
@@ -960,8 +1104,8 @@
                 card.innerHTML = `
                     <div class="poi-top">
                         <div>
-                            <div class="poi-name">${p.type === "start" ? "Start" : p.type === "finish" ? "Mål" : p.name}</div>
-                            <div class="poi-meta">${p.dist.toFixed(1).replace(".", ",")} km · passerer ${target ? formatDateTimeDA(target) : "–"}</div>
+                            <div class="poi-name">${p.type === "start" ? "Start" : p.type === "finish" ? "Mål" : `${userPointNumber(p)}. ${p.name}`}</div>
+                            <div class="poi-meta">${p.dist.toFixed(1).replace(".", ",")} km · ${target ? formatDateTimeDA(target) : "–"}</div>
                         </div>
                         ${p.type === "user" ? `<button class="delete-btn" title="Fjern punkt" onclick="removePoint('${p.id}')">×</button>` : ""}
                     </div>
@@ -1079,11 +1223,21 @@
 
         ensureSingleWelcomePopup();
         showWelcomeIfNeeded();
+        function handleWelcomeCloseEvent(event) {
+            const target = event.target;
+            if (
+                target === els.welcome ||
+                target?.closest?.("#closeWelcome") ||
+                target?.closest?.("#closeWelcomeX")
+            ) {
+                closeWelcome(event);
+            }
+        }
+
         els.closeWelcome?.addEventListener("click", closeWelcome);
         els.closeWelcomeX?.addEventListener("click", closeWelcome);
-        els.welcome?.addEventListener("click", (event) => {
-            if (event.target === els.welcome) closeWelcome();
-        });
+        els.welcome?.addEventListener("click", handleWelcomeCloseEvent, true);
+        els.welcome?.addEventListener("touchend", handleWelcomeCloseEvent, { passive: false, capture: true });
         document.addEventListener("keydown", (event) => {
             if (event.key === "Escape") closeWelcome();
         });
@@ -1093,11 +1247,11 @@
             const isCollapsed = els.panel.classList.contains("collapsed");
             setMobilePanel(isCollapsed);
         });
-        els.panel.addEventListener("click", (event) => {
-            if (els.panel.classList.contains("collapsed")) {
-                event.preventDefault();
-                setMobilePanel(true);
-            }
+        document.querySelector(".app-title")?.addEventListener("click", (event) => {
+            if (!window.matchMedia("(max-width: 720px)").matches) return;
+            const isCollapsed = els.panel.classList.contains("collapsed");
+            if (isCollapsed) event.preventDefault();
+            setMobilePanel(isCollapsed);
         });
 
         initPickers();
