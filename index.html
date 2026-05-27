@@ -9,8 +9,8 @@
     <style>
         :root {
             --bg: #030712;
-            --panel: rgba(8, 13, 23, 0.90);
-            --panel-strong: rgba(3, 7, 18, 0.96);
+            --panel: rgba(8, 13, 23, 0.96);
+            --panel-strong: rgba(3, 7, 18, 0.99);
             --card: #0b1220;
             --card-soft: #111827;
             --text: #f8fafc;
@@ -20,7 +20,7 @@
             --warning: #facc15;
             --danger: #ff4d4d;
             --border: rgba(148, 163, 184, 0.22);
-            --shadow: 0 18px 48px rgba(0, 0, 0, 0.54);
+            --shadow: 0 24px 70px rgba(0, 0, 0, 0.70);
         }
 
         * { box-sizing: border-box; }
@@ -183,10 +183,10 @@
         }
 
         .btn.secondary {
-            background: rgba(148, 163, 184, 0.10);
+            background: rgba(148, 163, 184, 0.14);
             box-shadow: none;
-            border: 1px solid rgba(148, 163, 184, 0.20);
-            color: #cbd5e1;
+            border: 1px solid var(--border);
+            color: #e2e8f0;
         }
 
         .btn-row {
@@ -282,8 +282,6 @@
             padding: 8px;
             border-radius: 12px;
             background: rgba(31, 41, 55, 0.72);
-            border: 1px solid rgba(148, 163, 184, 0.13);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
         }
 
         .weather-line.full { grid-column: 1 / -1; }
@@ -491,45 +489,6 @@
             padding: 3px 7px;
         }
 
-
-        .custom-marker > div {
-            background: #020617 !important;
-            color: #e0f2fe !important;
-            border: 2px solid #00e5ff !important;
-            box-shadow: 0 0 0 3px rgba(0,229,255,.18), 0 8px 22px rgba(0,0,0,.45) !important;
-        }
-
-        .custom-marker.user-point-marker > div {
-            border-color: #38bdf8 !important;
-            color: #bae6fd !important;
-        }
-
-        .poi-card.start .poi-name { color: #86efac; }
-        .poi-card.finish .poi-name { color: #fde68a; }
-
-        .poi-card.start .poi-name::after,
-        .poi-card.finish .poi-name::after {
-            display: inline-block;
-            margin-left: 7px;
-            padding: 2px 6px;
-            border-radius: 999px;
-            font-size: .62rem;
-            letter-spacing: .06em;
-            vertical-align: middle;
-            border: 1px solid rgba(148,163,184,.22);
-            color: #020617;
-        }
-
-        .poi-card.start .poi-name::after {
-            content: "START";
-            background: #86efac;
-        }
-
-        .poi-card.finish .poi-name::after {
-            content: "MÅL";
-            background: #fde68a;
-        }
-
         @media (max-width: 720px) {
             body { touch-action: manipulation; }
 
@@ -560,14 +519,14 @@
 
             #panel.collapsed .app-title { margin-bottom: 0; }
             #panel h1::after {
-                content: " ︿";
-                color: var(--accent);
-                font-size: .9rem;
-                font-weight: 900;
+                content: " · tryk øverst for at minimere";
+                color: var(--muted);
+                font-size: .78rem;
+                font-weight: 600;
             }
 
             #panel.collapsed h1::after {
-                content: " ﹀";
+                content: " · tryk for at åbne";
             }
 
             .input-grid, .btn-row, #route-info {
@@ -587,7 +546,7 @@
         <div class="welcome-card" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
             <button class="welcome-close" id="closeWelcomeX" type="button" aria-label="Luk vejledning">×</button>
             <h2 id="welcomeTitle">Rutevejr til din cykeltur 🚴‍♂️🌦️</h2>
-            <p><strong>1.</strong> Upload GPX-ruten<br><strong>2.</strong> Vælg startdato, starttid og fart<br><strong>3.</strong> Se vejret ved start, mål og dine egne punkter</p>
+            <p>Upload en GPX-fil, vælg startdato, starttid og forventet gennemsnitsfart. Appen beregner hvornår du passerer start, mål og dine egne punkter på ruten — og henter vejrudsigten for netop de tidspunkter.</p>
             <button class="btn" id="closeWelcome" type="button">Forstået</button>
         </div>
     </div>
@@ -654,7 +613,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/da.js"></script>
     <script>
-        const MET_USER_AGENT = "GPXRouteWeather/1.0 rute-vejr-app";
+        const MET_USER_AGENT = "GPXRouteWeather/1.0 thomasmn1978";
         const map = L.map("map", { zoomControl: true }).setView([56.2, 10.7], 7);
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -700,563 +659,43 @@
                 event.preventDefault();
                 event.stopPropagation();
             }
-            if (!els.welcome) return;
-            els.welcome.classList.add("hidden");
-            els.welcome.setAttribute("aria-hidden", "true");
-            els.welcome.style.display = "none";
+            const popup = document.getElementById("welcome-popup");
+            if (!popup) return false;
+            popup.classList.add("hidden");
+            popup.setAttribute("aria-hidden", "true");
+            popup.style.setProperty("display", "none", "important");
+            popup.style.setProperty("pointer-events", "none", "important");
+            return false;
         }
 
         window.closeWelcome = closeWelcome;
 
-        function showWelcomeIfNeeded() {
-            if (!els.welcome) return;
-            els.welcome.classList.remove("hidden");
-            els.welcome.removeAttribute("aria-hidden");
-            els.welcome.style.display = "grid";
-        }
+        function bindWelcomeClose() {
+            const popup = document.getElementById("welcome-popup");
+            const closeBtn = document.getElementById("closeWelcome");
+            const closeX = document.getElementById("closeWelcomeX");
+            if (!popup) return;
 
-        // Sørger for, at der aldrig vises mere end én intro-popup, selv hvis siden hostes
-        // sammen med ældre indlejret kode eller browseren genindlæser dele af DOM'en.
-        function ensureSingleWelcomePopup() {
-            const popups = Array.from(document.querySelectorAll('[id="welcome-popup"]'));
-            popups.slice(1).forEach(p => p.remove());
-        }
-
-        function setMobilePanel(open) {
-            if (!window.matchMedia("(max-width: 720px)").matches) return;
-            els.panel.classList.toggle("collapsed", !open);
-            setTimeout(fitRouteInVisibleArea, 230);
-        }
-
-        function pad(n) { return String(n).padStart(2, "0"); }
-
-        function formatDateDA(date) {
-            return `${pad(date.getDate())}-${pad(date.getMonth() + 1)}-${date.getFullYear()}`;
-        }
-
-        function formatTime24(date) {
-            return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
-        }
-
-        function formatDateTimeDA(date) {
-            return `${formatDateDA(date)} kl. ${formatTime24(date)}`;
-        }
-
-        function parseDatoTid(dVal, tVal) {
-            if (!dVal || !tVal) return null;
-            const [d, m, y] = dVal.split("-").map(Number);
-            const [hh, mm] = tVal.split(":").map(Number);
-            if (![d, m, y, hh, mm].every(Number.isFinite)) return null;
-            const parsed = new Date(y, m - 1, d, hh, mm);
-            return Number.isNaN(parsed.getTime()) ? null : parsed;
-        }
-
-        function getSpeed() {
-            const speed = parseFloat(String(els.speed.value).replace(",", "."));
-            return Number.isFinite(speed) && speed > 0 ? speed : null;
-        }
-
-        function durationLabel(hours) {
-            if (!Number.isFinite(hours)) return "–";
-            const mins = Math.round(hours * 60);
-            const h = Math.floor(mins / 60);
-            const m = mins % 60;
-            return h > 0 ? `${h} t ${pad(m)} min` : `${m} min`;
-        }
-
-        function setStatus(text) {
-            els.status.textContent = text;
-        }
-
-        function initPickers() {
-            const now = new Date();
-            flatpickr(els.startDate, {
-                locale: "da",
-                dateFormat: "d-m-Y",
-                defaultDate: now,
-                minDate: "today",
-                disableMobile: true,
-                onChange: updateAll
+            [closeBtn, closeX].forEach(btn => {
+                if (!btn) return;
+                btn.onclick = closeWelcome;
+                btn.addEventListener("pointerup", closeWelcome, { capture: true });
+                btn.addEventListener("touchend", closeWelcome, { passive: false, capture: true });
             });
 
-            flatpickr(els.startTime, {
-                locale: "da",
-                enableTime: true,
-                noCalendar: true,
-                time_24hr: true,
-                dateFormat: "H:i",
-                defaultDate: now,
-                minuteIncrement: 5,
-                disableMobile: true,
-                onChange: updateAll
-            });
-        }
-
-        function buildCumulativeDistances(coords) {
-            cumulativeKm = [0];
-            let sum = 0;
-            for (let i = 0; i < coords.length - 1; i++) {
-                sum += L.latLng(coords[i]).distanceTo(L.latLng(coords[i + 1])) / 1000;
-                cumulativeKm.push(sum);
-            }
-            totalDist = sum;
-        }
-
-        function nearestRoutePoint(latlng) {
-            let minD = Infinity;
-            let bestIndex = 0;
-            for (let i = 0; i < polylineCoords.length; i++) {
-                const d = L.latLng(polylineCoords[i]).distanceTo(latlng);
-                if (d < minD) {
-                    minD = d;
-                    bestIndex = i;
-                }
-            }
-            return {
-                lat: polylineCoords[bestIndex][0],
-                lon: polylineCoords[bestIndex][1],
-                dist: cumulativeKm[bestIndex] || 0,
-                distanceFromClick: minD
+            popup.onclick = function(event) {
+                if (event.target === popup) closeWelcome(event);
             };
+            popup.addEventListener("pointerup", function(event) {
+                if (event.target === popup) closeWelcome(event);
+            }, { capture: true });
         }
 
-        function firstUsefulName(address = {}) {
-            // Vigtigt for cykelryttere: Brug vejnavn først. Hvis der ikke findes et vejnavn,
-            // bruges det nærmeste stednavn i en fornuftig prioriteret rækkefølge.
-            return address.road
-                || address.pedestrian
-                || address.cycleway
-                || address.path
-                || address.footway
-                || address.track
-                || address.bridleway
-                || address.neighbourhood
-                || address.suburb
-                || address.hamlet
-                || address.village
-                || address.town
-                || address.city
-                || address.municipality
-                || address.county
-                || address.state
-                || null;
-        }
+        ensureSingleWelcomePopup();
+        showWelcomeIfNeeded();
+        bindWelcomeClose();
 
-        async function getLocName(lat, lon) {
-            try {
-                const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=da`;
-                const res = await fetch(url, {
-                    headers: {
-                        "Accept-Language": "da"
-                    }
-                });
-                if (!res.ok) throw new Error("Nominatim fejl");
-                const data = await res.json();
-                const name = firstUsefulName(data.address);
-                if (name) return name;
-
-                // Sidste fallback: brug første meningsfulde del af display_name.
-                if (data.display_name) {
-                    return data.display_name.split(",").map(x => x.trim()).find(Boolean) || "Vejrpunkt";
-                }
-                return "Vejrpunkt";
-            } catch (e) {
-                return "Vejrpunkt";
-            }
-        }
-
-        function markerIcon(type, number = null) {
-            const color = type === "start" ? "#22c55e" : type === "finish" ? "#f59e0b" : "#38bdf8";
-            const label = type === "start" ? "S" : type === "finish" ? "M" : String(number || "•");
-            const extraClass = type === "user" ? " user-point-marker" : "";
-            return L.divIcon({
-                className: `custom-marker${extraClass}`,
-                html: `<div style="display:grid;place-items:center;width:28px;height:28px;border-radius:999px;background:${color};color:#06101f;font-weight:900;border:3px solid white;box-shadow:0 8px 20px rgba(0,0,0,.35);">${label}</div>`,
-                iconSize: [28, 28],
-                iconAnchor: [14, 14]
-            });
-        }
-
-        function routeOrderedPoints() {
-            const start = pointCollection.filter(p => p.type === "start").sort((a, b) => a.dist - b.dist);
-            const users = pointCollection.filter(p => p.type === "user").sort((a, b) => a.dist - b.dist);
-            const finish = pointCollection.filter(p => p.type === "finish").sort((a, b) => a.dist - b.dist);
-            return [...start, ...users, ...finish];
-        }
-
-        function userPointNumber(point) {
-            return pointCollection
-                .filter(p => p.type === "user")
-                .sort((a, b) => a.dist - b.dist)
-                .findIndex(p => p.id === point.id) + 1;
-        }
-
-        function updatePointMarkers() {
-            pointCollection.forEach(p => {
-                const number = p.type === "user" ? userPointNumber(p) : null;
-                p.marker.setIcon(markerIcon(p.type, number));
-                const label = p.type === "user" ? `${number}. ${p.name}` : p.name;
-                p.marker.bindPopup(`<strong>${label}</strong><br>${p.dist.toFixed(1).replace(".", ",")} km fra start`);
-            });
-        }
-
-        function routeBearing(from, to) {
-            const lat1 = from[0] * Math.PI / 180;
-            const lat2 = to[0] * Math.PI / 180;
-            const dLon = (to[1] - from[1]) * Math.PI / 180;
-            const y = Math.sin(dLon) * Math.cos(lat2);
-            const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-            return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
-        }
-
-        function pointAtDistance(km) {
-            if (!polylineCoords.length || !cumulativeKm.length) return null;
-            for (let i = 1; i < cumulativeKm.length; i++) {
-                if (cumulativeKm[i] >= km) {
-                    const prevKm = cumulativeKm[i - 1];
-                    const nextKm = cumulativeKm[i];
-                    const ratio = nextKm === prevKm ? 0 : (km - prevKm) / (nextKm - prevKm);
-                    const from = polylineCoords[i - 1];
-                    const to = polylineCoords[i];
-                    return {
-                        lat: from[0] + (to[0] - from[0]) * ratio,
-                        lon: from[1] + (to[1] - from[1]) * ratio,
-                        bearing: routeBearing(from, to)
-                    };
-                }
-            }
-            const last = polylineCoords.length - 1;
-            return {
-                lat: polylineCoords[last][0],
-                lon: polylineCoords[last][1],
-                bearing: routeBearing(polylineCoords[last - 1], polylineCoords[last])
-            };
-        }
-
-        async function addPoint(lat, lon, name = null, type = "user", forceDist = null) {
-            const id = `p-${Date.now()}-${Math.round(Math.random() * 100000)}`;
-            const displayName = name || await getLocName(lat, lon);
-            const dist = forceDist !== null ? forceDist : nearestRoutePoint(L.latLng(lat, lon)).dist;
-            const marker = L.marker([lat, lon], { icon: markerIcon(type) }).addTo(pointLayer);
-            pointCollection.push({ id, lat, lon, name: displayName, type, dist, marker });
-            pointCollection.sort((a, b) => a.dist - b.dist);
-            updatePointMarkers();
-            updateAll();
-        }
-
-        function removePoint(id) {
-            const p = pointCollection.find(x => x.id === id);
-            if (!p || p.type !== "user") return;
-            pointLayer.removeLayer(p.marker);
-            pointCollection = pointCollection.filter(x => x.id !== id);
-            updatePointMarkers();
-            updateAll();
-        }
-
-        window.removePoint = removePoint;
-
-        window.addEventListener("resize", () => {
-            clearTimeout(window.__routeFitTimer);
-            window.__routeFitTimer = setTimeout(fitRouteInVisibleArea, 150);
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") closeWelcome(event);
         });
 
-        function formatWindValue(value) {
-            const num = Number(value);
-            if (!Number.isFinite(num)) return "–";
-            return Number.isInteger(num) ? String(num) : num.toFixed(1).replace(".", ",");
-        }
-
-        function forecastSymbol(ts) {
-            const symbol = ts?.data?.next_1_hours?.summary?.symbol_code || ts?.data?.next_6_hours?.summary?.symbol_code || "";
-            if (symbol.includes("thunder")) return "⛈️";
-            if (symbol.includes("sleet")) return "🌨️";
-            if (symbol.includes("snow")) return "❄️";
-            if (symbol.includes("rain")) return "🌧️";
-            if (symbol.includes("fog")) return "🌫️";
-            if (symbol.includes("partlycloudy")) return "⛅";
-            if (symbol.includes("cloud")) return "☁️";
-            if (symbol.includes("clearsky") || symbol.includes("fair")) return "☀️";
-            return "🌦️";
-        }
-
-        function chooseForecast(timeseries, target) {
-            if (!timeseries?.length || !target) {
-                return { ts: null, reason: "MET/YR leverede ikke vejrdata for punktet." };
-            }
-
-            const firstTime = new Date(timeseries[0].time);
-            const lastTime = new Date(timeseries[timeseries.length - 1].time);
-
-            if (target < firstTime || target > lastTime) {
-                return {
-                    ts: null,
-                    reason: `Der findes kun vejrdata fra ${formatDateTimeDA(firstTime)} til ${formatDateTimeDA(lastTime)}.`
-                };
-            }
-
-            let best = timeseries[0];
-            let bestDelta = Math.abs(new Date(best.time) - target);
-            for (const item of timeseries) {
-                const delta = Math.abs(new Date(item.time) - target);
-                if (delta < bestDelta) {
-                    best = item;
-                    bestDelta = delta;
-                }
-            }
-
-            // MET/YR bruger typisk time-opløsning tæt på nu og grovere opløsning længere fremme.
-            // Hvis nærmeste datapunkt er for langt fra passagetiden, vises en tydelig besked i stedet
-            // for at vise en forkert vejrtime.
-            const maxAllowedDeltaMs = 3.5 * 60 * 60 * 1000;
-            if (bestDelta > maxAllowedDeltaMs) {
-                return {
-                    ts: null,
-                    reason: `Nærmeste vejrdata ligger for langt fra passagetiden. Passagetid: ${formatDateTimeDA(target)}.`
-                };
-            }
-
-            return { ts: best, reason: null };
-        }
-
-        async function fetchWeather(p, target) {
-            const key = `${p.lat.toFixed(4)},${p.lon.toFixed(4)}`;
-            let data = weatherCache.get(key);
-            if (!data) {
-                const res = await fetch(`https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=${p.lat}&lon=${p.lon}`, {
-                    headers: { "User-Agent": MET_USER_AGENT }
-                });
-                if (!res.ok) throw new Error("Vejrdata kunne ikke hentes");
-                data = await res.json();
-                weatherCache.set(key, data);
-            }
-            const timeseries = data.properties?.timeseries || [];
-            const choice = chooseForecast(timeseries, target);
-            return { ts: choice.ts, reason: choice.reason, timeseries };
-        }
-
-        function getNumberOrNull(value) {
-            const num = Number(value);
-            return Number.isFinite(num) ? num : null;
-        }
-
-        function findNearestGust(timeseries, target, indexHint = -1) {
-            if (!Array.isArray(timeseries)) return null;
-
-            // Først tjekkes den valgte vejrtime, derefter nærmeste timer omkring passagetidspunktet.
-            const candidates = [];
-            if (indexHint >= 0) candidates.push(timeseries[indexHint]);
-            for (const item of timeseries) candidates.push(item);
-
-            let best = null;
-            let bestDelta = Infinity;
-            for (const item of candidates) {
-                const gust = getNumberOrNull(item?.data?.instant?.details?.wind_speed_of_gust);
-                if (gust === null) continue;
-                const delta = Math.abs(new Date(item.time) - target);
-                if (delta < bestDelta) {
-                    best = gust;
-                    bestDelta = delta;
-                }
-            }
-            return best;
-        }
-
-        function weatherHtml(ts, target, timeseries = [], reason = "Ingen vejrudsigt for dette tidspunkt.") {
-            if (!ts) return `<div class="coverage-warning">⚠️ ${reason}<br><span class="data-time">Vælg en tidligere dato/starttid eller lavere passagetid for punktet.</span></div>`;
-            const instant = ts.data.instant.details;
-            const next = ts.data.next_1_hours?.details || ts.data.next_6_hours?.details || {};
-            const forecastTime = new Date(ts.time);
-            const rain = next.precipitation_amount ?? 0;
-            const windSpeedNumber = getNumberOrNull(instant.wind_speed);
-            const directGustNumber = getNumberOrNull(instant.wind_speed_of_gust);
-            const indexHint = Array.isArray(timeseries) ? timeseries.findIndex(item => item.time === ts.time) : -1;
-            const gustNumber = directGustNumber ?? findNearestGust(timeseries, target, indexHint);
-            const windText = `${formatWindValue(windSpeedNumber)} m/s (${gustNumber === null ? "–" : formatWindValue(gustNumber)} m/s)`;
-            const arrowDeg = getNumberOrNull(instant.wind_from_direction) ?? 0;
-            const tempNumber = getNumberOrNull(instant.air_temperature);
-            const tempText = tempNumber === null ? "–" : tempNumber.toFixed(1).replace(".", ",");
-
-            return `
-                <div class="weather-line">${forecastSymbol(ts)} ${tempText} °C</div>
-                <div class="weather-line">💧 ${String(rain).replace(".", ",")} mm</div>
-                <div class="weather-line full">💨 ${windText} <span class="wind-arrow" style="transform: rotate(${arrowDeg}deg);">➤</span></div>
-            `;
-        }
-
-        function pointPassageTime(p) {
-            const start = parseDatoTid(els.startDate.value, els.startTime.value);
-            const speed = getSpeed();
-            if (!start || !speed) return null;
-            return new Date(start.getTime() + (p.dist / speed * 3600000));
-        }
-
-        function fitRouteInVisibleArea() {
-            if (!routeLine) return;
-            map.invalidateSize();
-            const panel = document.getElementById("panel");
-            const panelRect = panel.getBoundingClientRect();
-            const mapRect = map.getContainer().getBoundingClientRect();
-            const isMobileLayout = window.matchMedia("(max-width: 720px)").matches;
-            const safe = 22;
-            const options = { animate: false, maxZoom: 16 };
-
-            if (isMobileLayout) {
-                // Menuen ligger nederst på mobil. Nederste padding svarer til den synlige menu,
-                // så ruten zoomes mest muligt uden at blive dækket.
-                options.paddingTopLeft = [safe, safe];
-                options.paddingBottomRight = [safe, Math.max(safe, Math.ceil(mapRect.bottom - panelRect.top) + safe)];
-            } else {
-                // Menuen ligger til højre på desktop. Højre padding svarer til menuens overlap.
-                options.paddingTopLeft = [safe, safe];
-                options.paddingBottomRight = [Math.max(safe, Math.ceil(mapRect.right - panelRect.left) + safe), safe];
-            }
-
-            map.fitBounds(routeLine.getBounds(), options);
-        }
-
-        function updateStats() {
-            const speed = getSpeed();
-            const start = parseDatoTid(els.startDate.value, els.startTime.value);
-            if (!totalDist || !speed || !start) {
-                els.endDate.value = "";
-                els.endTime.value = "";
-                return;
-            }
-            const durationHours = totalDist / speed;
-            const end = new Date(start.getTime() + durationHours * 3600000);
-            els.endDate.value = formatDateDA(end);
-            els.endTime.value = formatTime24(end);
-            els.routeInfo.innerHTML = `
-                <div class="stat"><small>Distance</small><strong>${totalDist.toFixed(1).replace(".", ",")} km</strong></div>
-                <div class="stat"><small>Køretid</small><strong>${durationLabel(durationHours)}</strong></div>
-                <div class="stat"><small>Slut</small><strong>${formatTime24(end)}</strong></div>
-            `;
-            els.statsSection.style.display = "block";
-        }
-
-        function renderListSkeleton() {
-            els.list.innerHTML = "";
-            const userPoints = pointCollection.filter(p => p.type === "user").length;
-            els.pointCount.textContent = `${userPoints} ekstra punkt${userPoints === 1 ? "" : "er"}`;
-            if (!pointCollection.length) {
-                els.list.innerHTML = `<div id="hint">Ingen punkter endnu. Upload en GPX-rute først.</div>`;
-                return;
-            }
-
-            updatePointMarkers();
-            for (const p of routeOrderedPoints()) {
-                const target = pointPassageTime(p);
-                const card = document.createElement("div");
-                card.className = `poi-card ${p.type === "start" ? "start" : p.type === "finish" ? "finish" : ""}`;
-                card.id = `card-${p.id}`;
-                card.innerHTML = `
-                    <div class="poi-top">
-                        <div>
-                            <div class="poi-name">${p.type === "start" ? "Start" : p.type === "finish" ? "Mål" : `${userPointNumber(p)}. ${p.name}`}</div>
-                            <div class="poi-meta">${p.dist.toFixed(1).replace(".", ",")} km · ${target ? formatDateTimeDA(target) : "–"}</div>
-                        </div>
-                        ${p.type === "user" ? `<button class="delete-btn" title="Fjern punkt" onclick="removePoint('${p.id}')">×</button>` : ""}
-                    </div>
-                    <div class="weather" id="weather-${p.id}"><div class="weather-line full">Henter vejr...</div></div>
-                `;
-                els.list.appendChild(card);
-            }
-        }
-
-        async function updateWeather() {
-            const start = parseDatoTid(els.startDate.value, els.startTime.value);
-            const speed = getSpeed();
-            if (!pointCollection.length || !start || !speed) return;
-
-            const runId = ++weatherRunId;
-            let unavailableCount = 0;
-            setStatus("Henter vejr for ruten...");
-
-            for (const p of routeOrderedPoints()) {
-                if (runId !== weatherRunId) return;
-                const target = pointPassageTime(p);
-                const box = document.getElementById(`weather-${p.id}`);
-                if (!box || !target) continue;
-                try {
-                    const { ts, reason, timeseries } = await fetchWeather(p, target);
-                    if (!ts) unavailableCount++;
-                    box.innerHTML = weatherHtml(ts, target, timeseries, reason);
-                } catch (e) {
-                    box.innerHTML = `<div class="weather-line full">⚠️ Kunne ikke hente vejrdata.</div>`;
-                }
-            }
-            setStatus(unavailableCount > 0
-                ? `${unavailableCount} punkt${unavailableCount === 1 ? "" : "er"} ligger uden for den tilgængelige vejrudsigt.`
-                : "Vejret er opdateret for start, mål og dine punkter.");
-        }
-
-        let updateTimer = null;
-        function updateAll() {
-            updateStats();
-            renderListSkeleton();
-            clearTimeout(updateTimer);
-            updateTimer = setTimeout(updateWeather, 250);
-        }
-
-        async function handleGpxUpload(file) {
-            setStatus("Indlæser GPX-rute...");
-            routeLayer.clearLayers();
-            pointLayer.clearLayers();
-            pointCollection = [];
-            polylineCoords = [];
-            cumulativeKm = [];
-            totalDist = 0;
-            weatherCache.clear();
-            weatherRunId++;
-
-            const text = await file.text();
-            const xml = new DOMParser().parseFromString(text, "text/xml");
-            const parserError = xml.querySelector("parsererror");
-            if (parserError) {
-                setStatus("GPX-filen kunne ikke læses. Prøv en anden fil.");
-                return;
-            }
-
-            const trkpts = Array.from(xml.getElementsByTagName("trkpt"));
-            polylineCoords = trkpts
-                .map(p => [parseFloat(p.getAttribute("lat")), parseFloat(p.getAttribute("lon"))])
-                .filter(([lat, lon]) => Number.isFinite(lat) && Number.isFinite(lon));
-
-            if (polylineCoords.length < 2) {
-                setStatus("GPX-filen mangler rutedata/trkpt-punkter.");
-                return;
-            }
-
-            buildCumulativeDistances(polylineCoords);
-            routeLine = L.polyline(polylineCoords, { color: "#00e5ff", weight: 5, opacity: 0.95 }).addTo(routeLayer);
-
-            await addPoint(polylineCoords[0][0], polylineCoords[0][1], "Start", "start", 0);
-            await addPoint(polylineCoords[polylineCoords.length - 1][0], polylineCoords[polylineCoords.length - 1][1], "Mål", "finish", totalDist);
-            setStatus("Ruten er indlæst. Klik på ruten for at tilføje flere vejrpunkter.");
-            setMobilePanel(false);
-            setTimeout(fitRouteInVisibleArea, 100);
-        }
-
-        els.gpx.addEventListener("change", async (e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            try {
-                await handleGpxUpload(file);
-            } catch (err) {
-                setStatus("Der skete en fejl under indlæsning af GPX-filen.");
-            }
-        });
-
-        els.speed.addEventListener("input", updateAll);
-        els.refreshBtn.addEventListener("click", () => {
-            weatherCache.clear();
-            updateAll();
-        });
-
-        map.on("click", async (e) => {
-            if (polylineCoords.length < 2) {
-                setStatus("Upload en GPX-rute før du tilføjer vejrpunkter.");
-                return;
-            }
-            const snap = nearestRoutePoint(e.latlng);
-            if (snap.distanceFromClick > 1000) {
