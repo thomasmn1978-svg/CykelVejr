@@ -148,7 +148,7 @@
             padding: 10px 11px;
             border: 1px solid var(--border);
             border-radius: 12px;
-            background: #0f172a;
+            background: #0f172a !important;
             color: var(--text);
             font: inherit;
             outline: none;
@@ -352,12 +352,12 @@
         .welcome-card p { color: #cbd5e1; line-height: 1.45; }
 
         .leaflet-popup-content-wrapper, .leaflet-popup-tip {
-            background: #0f172a;
+            background: #0f172a !important;
             color: var(--text);
         }
 
         .flatpickr-calendar {
-            background: #0f172a;
+            background: #0f172a !important;
             border: 1px solid var(--border);
             box-shadow: var(--shadow);
             color: var(--text);
@@ -405,8 +405,22 @@
         }
 
         .flatpickr-time, .flatpickr-months .flatpickr-month {
-            background: #0f172a;
+            background: #0f172a !important;
             color: var(--text);
+        }
+
+        /* Mørk baggrund i native dato/tidsvælger */
+        input[type="date"],
+        input[type="time"] {
+            color-scheme: dark;
+            background: #0f172a !important;
+            color: var(--text) !important;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
         }
 
 
@@ -546,7 +560,7 @@
         <div class="welcome-card" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
             <button class="welcome-close" id="closeWelcomeX" type="button" aria-label="Luk vejledning">×</button>
             <h2 id="welcomeTitle">Rutevejr til din cykeltur 🚴‍♂️🌦️</h2>
-            <p>Upload en GPX-fil, vælg startdato, starttid og forventet gennemsnitsfart. Appen beregner hvornår du passerer start, mål og dine egne punkter på ruten — og henter vejrudsigten for netop de tidspunkter.</p>
+            <p>Upload en GPX-fil, vælg starttid og fart — så vises vejret automatisk langs ruten på de tidspunkter du forventes at passere.</p>
             <button class="btn" id="closeWelcome" type="button">Forstået</button>
         </div>
     </div>
@@ -563,12 +577,13 @@
             <span class="badge">Cykel</span>
         </div>
 
+        <div class="btn-row top-actions">
+            <label class="btn" for="gpx">📁 Upload GPX<input type="file" id="gpx" hidden accept=".gpx,application/gpx+xml,text/xml" /></label>
+            <button class="btn secondary" id="refreshBtn" type="button">🔄 Opdater vejr</button>
+        </div>
+
         <section class="section">
             <div class="section-title">Turdata</div>
-            <div class="btn-row top-actions">
-                <label class="btn" for="gpx">📁 Upload GPX<input type="file" id="gpx" hidden accept=".gpx,application/gpx+xml,text/xml" /></label>
-                <button class="btn secondary" id="refreshBtn" type="button">🔄 Opdater vejr</button>
-            </div>
             <div class="input-grid">
                 <div class="input-group">
                     <label for="startDate">Startdato</label>
@@ -1105,7 +1120,7 @@
                     <div class="poi-top">
                         <div>
                             <div class="poi-name">${p.type === "start" ? "Start" : p.type === "finish" ? "Mål" : `${userPointNumber(p)}. ${p.name}`}</div>
-                            <div class="poi-meta">${p.dist.toFixed(1).replace(".", ",")} km · ${target ? formatDateTimeDA(target) : "–"}</div>
+                            <div class="poi-meta">${p.dist.toFixed(1).replace(".", ",")} km fra start</div>
                         </div>
                         ${p.type === "user" ? `<button class="delete-btn" title="Fjern punkt" onclick="removePoint('${p.id}')">×</button>` : ""}
                     </div>
