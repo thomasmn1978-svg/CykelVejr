@@ -306,54 +306,6 @@
             transform-origin: center;
         }
 
-        #welcome-popup {
-            position: fixed;
-            inset: 0;
-            z-index: 2500;
-            display: grid;
-            place-items: center;
-            padding: 20px;
-            background: rgba(2, 6, 23, 0.68);
-            backdrop-filter: blur(8px);
-        }
-
-        #welcome-popup.hidden,
-        #welcome-popup[hidden] {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            pointer-events: none !important;
-        }
-
-        .welcome-card {
-            position: relative;
-            width: min(450px, 100%);
-            padding: 22px;
-            border-radius: 24px;
-            background: var(--panel-strong);
-            border: 1px solid rgba(56, 189, 248, 0.38);
-            box-shadow: var(--shadow);
-        }
-
-        .welcome-close {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            width: 40px;
-            height: 40px;
-            border-radius: 999px;
-            border: 1px solid rgba(148, 163, 184, 0.30);
-            background: rgba(15, 23, 42, 0.88);
-            color: var(--text);
-            font-size: 1.35rem;
-            font-weight: 900;
-            line-height: 1;
-            cursor: pointer;
-        }
-
-        .welcome-card h2 { margin: 0 0 10px; }
-        .welcome-card p { color: #cbd5e1; line-height: 1.45; }
-
         .leaflet-popup-content-wrapper, .leaflet-popup-tip {
             background: #0f172a;
             color: var(--text);
@@ -492,6 +444,28 @@
             padding: 3px 7px;
         }
 
+        .quick-help {
+            margin-top: 10px;
+            padding: 10px 11px;
+            border-radius: 16px;
+            background: rgba(0, 229, 255, 0.08);
+            border: 1px solid rgba(0, 229, 255, 0.22);
+            color: #cbd5e1;
+            font-size: 0.78rem;
+            line-height: 1.35;
+        }
+
+        .quick-help strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #e0f2fe;
+            font-size: 0.82rem;
+        }
+
+        .quick-help span {
+            color: var(--muted);
+        }
+
         @media (max-width: 720px) {
             body { touch-action: manipulation; }
 
@@ -540,20 +514,10 @@
             .poi-card { padding: 9px; }
             .weather-line { min-height: 34px; font-size: .82rem; }
             input, .btn { min-height: 48px; font-size: 16px; }
-            .welcome-card { padding: 18px; }
         }
     </style>
 </head>
 <body>
-    <div id="welcome-popup" onclick="forceCloseWelcome(event)">
-        <div class="welcome-card" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle" onclick="event.stopPropagation()">
-            <button class="welcome-close" id="closeWelcomeX" type="button" aria-label="Luk" onclick="forceCloseWelcome(event)">×</button>
-            <h2 id="welcomeTitle">Rutevejr</h2>
-            <p>Upload en GPX-rute, vælg starttid og fart. Så viser siden vejret ved start, mål og dine punkter.</p>
-            <button class="btn" id="closeWelcome" type="button" onclick="forceCloseWelcome(event)">Luk</button>
-        </div>
-    </div>
-
     <div id="map"></div>
 
     <aside id="panel" aria-label="Rutevejr panel">
@@ -564,6 +528,12 @@
                 <p class="subtitle">Vejr langs GPX-ruten på dine passagetider</p>
             </div>
             <span class="badge">Cykel</span>
+        </div>
+
+        <div class="quick-help">
+            <strong>Sådan bruges siden</strong>
+            Upload en GPX-rute, vælg starttid og fart. Klik på ruten for ekstra vejrpunkter.
+            <br><span>Start, mål og dine punkter får vejr efter forventet passagetid.</span>
         </div>
 
         <section class="section">
@@ -616,7 +586,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/da.js"></script>
     <script>
-        const MET_USER_AGENT = "GPXRouteWeather/1.0 thomasmn1978";
+        const MET_USER_AGENT = "GPXRouteWeather/1.0 rute-vejr-app";
         const map = L.map("map", { zoomControl: true }).setView([56.2, 10.7], 7);
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -649,60 +619,8 @@
             pointCount: document.getElementById("pointCount"),
             refreshBtn: document.getElementById("refreshBtn"),
             panel: document.getElementById("panel"),
-            panelHandle: document.getElementById("panelHandle"),
-            welcome: document.getElementById("welcome-popup"),
-            closeWelcome: document.getElementById("closeWelcome"),
-            closeWelcomeX: document.getElementById("closeWelcomeX")
+            panelHandle: document.getElementById("panelHandle")
         };
-
-
-
-        function reallyRemoveWelcome() {
-            document.querySelectorAll('[id="welcome-popup"]').forEach(popup => {
-                popup.classList.add("hidden");
-                popup.setAttribute("hidden", "");
-                popup.setAttribute("aria-hidden", "true");
-                popup.style.setProperty("display", "none", "important");
-                popup.style.setProperty("visibility", "hidden", "important");
-                popup.style.setProperty("opacity", "0", "important");
-                popup.style.setProperty("pointer-events", "none", "important");
-                setTimeout(() => popup.remove(), 0);
-            });
-        }
-
-        function forceCloseWelcome(event) {
-            if (event) {
-                event.preventDefault?.();
-                event.stopPropagation?.();
-                event.stopImmediatePropagation?.();
-            }
-            reallyRemoveWelcome();
-            return false;
-        }
-
-        function closeWelcome(event) {
-            return forceCloseWelcome(event);
-        }
-
-        window.forceCloseWelcome = forceCloseWelcome;
-        window.closeWelcome = closeWelcome;
-
-        function showWelcomeIfNeeded() {
-            const popup = document.getElementById("welcome-popup");
-            if (!popup) return;
-            popup.removeAttribute("hidden");
-            popup.classList.remove("hidden");
-            popup.removeAttribute("aria-hidden");
-            popup.style.setProperty("display", "grid", "important");
-            popup.style.setProperty("visibility", "visible", "important");
-            popup.style.setProperty("opacity", "1", "important");
-            popup.style.setProperty("pointer-events", "auto", "important");
-        }
-
-        function ensureSingleWelcomePopup() {
-            const popups = Array.from(document.querySelectorAll('[id="welcome-popup"]'));
-            popups.slice(1).forEach(p => p.remove());
-        }
 
         function setMobilePanel(open) {
             if (!window.matchMedia("(max-width: 720px)").matches) return;
@@ -827,7 +745,11 @@
         async function getLocName(lat, lon) {
             try {
                 const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=da`;
-                const res = await fetch(url);
+                const res = await fetch(url, {
+                    headers: {
+                        "Accept-Language": "da"
+                    }
+                });
                 if (!res.ok) throw new Error("Nominatim fejl");
                 const data = await res.json();
                 const name = firstUsefulName(data.address);
@@ -946,12 +868,14 @@
 
         function forecastSymbol(ts) {
             const symbol = ts?.data?.next_1_hours?.summary?.symbol_code || ts?.data?.next_6_hours?.summary?.symbol_code || "";
-            if (symbol.includes("rain")) return "🌧️";
-            if (symbol.includes("cloud")) return "☁️";
-            if (symbol.includes("clear")) return "☀️";
+            if (symbol.includes("thunder")) return "⛈️";
             if (symbol.includes("sleet")) return "🌨️";
             if (symbol.includes("snow")) return "❄️";
+            if (symbol.includes("rain")) return "🌧️";
             if (symbol.includes("fog")) return "🌫️";
+            if (symbol.includes("partlycloudy")) return "⛅";
+            if (symbol.includes("cloud")) return "☁️";
+            if (symbol.includes("clearsky") || symbol.includes("fair")) return "☀️";
             return "🌦️";
         }
 
@@ -1112,7 +1036,8 @@
 
         function renderListSkeleton() {
             els.list.innerHTML = "";
-            els.pointCount.textContent = `${pointCollection.length} punkt${pointCollection.length === 1 ? "" : "er"}`;
+            const userPoints = pointCollection.filter(p => p.type === "user").length;
+            els.pointCount.textContent = `${userPoints} ekstra punkt${userPoints === 1 ? "" : "er"}`;
             if (!pointCollection.length) {
                 els.list.innerHTML = `<div id="hint">Ingen punkter endnu. Upload en GPX-rute først.</div>`;
                 return;
@@ -1204,13 +1129,12 @@
 
             buildCumulativeDistances(polylineCoords);
             routeLine = L.polyline(polylineCoords, { color: "#00e5ff", weight: 5, opacity: 0.95 }).addTo(routeLayer);
-            fitRouteInVisibleArea();
 
             await addPoint(polylineCoords[0][0], polylineCoords[0][1], "Start", "start", 0);
             await addPoint(polylineCoords[polylineCoords.length - 1][0], polylineCoords[polylineCoords.length - 1][1], "Mål", "finish", totalDist);
             setStatus("Ruten er indlæst. Klik på ruten for at tilføje flere vejrpunkter.");
             setMobilePanel(false);
-            fitRouteInVisibleArea();
+            setTimeout(fitRouteInVisibleArea, 100);
         }
 
         els.gpx.addEventListener("change", async (e) => {
@@ -1242,29 +1166,4 @@
             await addPoint(snap.lat, snap.lon, null, "user", snap.dist);
             if (navigator.vibrate) navigator.vibrate(25);
             setStatus("Vejrpunkt tilføjet.");
-        });
-
-        ensureSingleWelcomePopup();
-        showWelcomeIfNeeded();
-
-        document.addEventListener("click", (event) => {
-            if (event.target?.closest?.("#closeWelcome, #closeWelcomeX") || event.target?.id === "welcome-popup") {
-                forceCloseWelcome(event);
-            }
-        }, true);
-
-        document.addEventListener("pointerdown", (event) => {
-            if (event.target?.closest?.("#closeWelcome, #closeWelcomeX") || event.target?.id === "welcome-popup") {
-                forceCloseWelcome(event);
-            }
-        }, true);
-
-        document.addEventListener("touchstart", (event) => {
-            if (event.target?.closest?.("#closeWelcome, #closeWelcomeX") || event.target?.id === "welcome-popup") {
-                forceCloseWelcome(event);
-            }
-        }, { passive: false, capture: true });
-
-        document.addEventListener("keydown", (event) => {
-            if (event.key === "Escape") forceCloseWelcome(event);
         });
